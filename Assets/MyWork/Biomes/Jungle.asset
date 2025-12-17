@@ -10,9 +10,9 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: f33d389c109a8684ea92e22ae7ff6046, type: 3}
-  m_Name: Desert
+  m_Name: Jungle
   m_EditorClassIdentifier: 
   tiles: []
-  minHeight: 0.2
-  minMoisture: 0
-  minHeat: 0.5
+  minHeight: 0.3
+  minMoisture: 0.5
+  minHeat: 0.62

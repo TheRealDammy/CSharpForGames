@@ -1,6 +1,7 @@
 using System;
 using UnityEngine;
 using UnityEngine.InputSystem;
+using UnityEngine.Rendering;
 
 /// <summary>
 /// A class to control the top-down character.
@@ -23,6 +24,7 @@ public class TopDownCharacterController : MonoBehaviour
     
     //The direction that the player is moving in.
     private Vector2 m_playerDirection;
+    private Vector2 m_lastDirection;
    
 
     [Header("Movement parameters")]
@@ -41,6 +43,17 @@ public class TopDownCharacterController : MonoBehaviour
     private float sprintCost = 30f;
     private bool canSprint = false;
 
+    [Header("Projectile parameters")]
+    [SerializeField] private GameObject m_projectilePrefab;
+    [SerializeField] private Transform m_projectileSpawnPoint;
+    [SerializeField] private float m_projectileSpeed;
+    [SerializeField] private float m_fireRate;
+    private float m_nextFireTime = 0f;
+
+    Vector3 mousePos = Input.mousePosition;
+
+    float mouseX = Input.GetAxis("Mouse X");
+    float mouseY = Input.GetAxis("Mouse Y");
 
     /// <summary>
     /// When the script first initialises this gets called.
@@ -87,6 +100,8 @@ public class TopDownCharacterController : MonoBehaviour
     /// </summary>
     void Update()
     {
+        
+
         // store any movement inputs into m_playerDirection - this will be used in FixedUpdate to move the player.
         m_playerDirection = m_moveAction.ReadValue<Vector2>();
         
@@ -100,6 +115,8 @@ public class TopDownCharacterController : MonoBehaviour
             m_animator.SetFloat("Horizontal", m_playerDirection.x);
             m_animator.SetFloat("Vertical", m_playerDirection.y);
             canSprint = true;
+
+            m_lastDirection = m_playerDirection;
         }
         else 
         {
@@ -143,11 +160,30 @@ public class TopDownCharacterController : MonoBehaviour
             m_playerSpeed = 200f;
         }
         // check if an attack has been triggered.
-        if (m_attackAction.IsPressed())
+        if (m_attackAction.IsPressed() && Time.time > m_nextFireTime)
         {
-            // just log that an attack has been registered for now
-            // we will look at how to do this in future sessions.
+            m_nextFireTime = Time.time + m_fireRate;
+            Fire();
             Debug.Log("Attack!");
+        }
+    }
+
+    private void Fire()
+    {
+        Vector2 MousePosition = Mouse.current.position.ReadValue();
+        Vector3 mousePointOnScreen = Camera.main.ScreenToWorldPoint(MousePosition);
+
+        Vector2 fireDirection = mousePointOnScreen;
+        if (fireDirection == Vector2.zero)
+        {
+            fireDirection = Vector2.down; // Default direction if no movement
+        }
+        GameObject spawnedProjectile = Instantiate(m_projectilePrefab, m_projectileSpawnPoint.position, Quaternion.identity);
+
+        Rigidbody2D projectileRB = spawnedProjectile.GetComponent<Rigidbody2D>();
+        if (projectileRB != null)
+        {
+            projectileRB.AddForce(fireDirection.normalized * m_projectileSpeed, ForceMode2D.Impulse);
         }
     }
 }
