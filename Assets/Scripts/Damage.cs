@@ -7,6 +7,7 @@ public class Damage : MonoBehaviour
         if (!collision.gameObject.CompareTag("Player"))
         {
             Destroy(gameObject);
+            
         }
     }
 }
