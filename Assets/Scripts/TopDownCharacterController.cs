@@ -125,8 +125,6 @@ public class TopDownCharacterController : MonoBehaviour
         if (m_rollAction.WasPressedThisFrame())
         {
             m_animator.SetTrigger("Roll");
-
-            Debug.Log("Roll!");
         }
 
         if (canSprint == true)
@@ -163,7 +161,6 @@ public class TopDownCharacterController : MonoBehaviour
         {
             m_nextFireTime = Time.time + m_fireRate;
             Fire();
-            Debug.Log("Attack!");
         }
     }
 
