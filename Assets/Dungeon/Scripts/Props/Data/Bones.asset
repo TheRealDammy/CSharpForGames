@@ -20,10 +20,11 @@ MonoBehaviour:
   NearWallRight: 1
   NearWallLeft: 1
   Inner: 1
-  PlacementQuantityMin: 50
-  PlacementQuantityMax: 50
+  PlacementQuantityMin: 2
+  PlacementQuantityMax: 2
   PlaceAsGroup: 0
   GroupMinCount: 1
   GroupMaxCount: 1
   spawnChance: 1
   hasColliders: 0
+  OnlyCorner: 0

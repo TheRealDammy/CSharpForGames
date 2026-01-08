@@ -25,5 +25,6 @@ MonoBehaviour:
   PlaceAsGroup: 0
   GroupMinCount: 1
   GroupMaxCount: 1
-  spawnChance: 0.5
+  spawnChance: 1
   hasColliders: 1
+  OnlyCorner: 1

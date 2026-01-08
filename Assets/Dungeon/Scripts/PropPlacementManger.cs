@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -31,6 +31,7 @@ public class PropPlacementManager : MonoBehaviour
 
         if (dungeonData == null || dungeonData.rooms == null) return;
         if (propsToPlace == null || propsToPlace.Count == 0) return;
+        propsToPlace = propsToPlace.Where(p => p != null).ToList();
 
         foreach (Room room in dungeonData.rooms)
         {
@@ -42,8 +43,7 @@ public class PropPlacementManager : MonoBehaviour
 
             //Place props near LEFT wall
             List<Prop> leftWallProps = propsToPlace
-                .Where(x => x.NearWallLeft && !x.Corner)
-                .OrderByDescending(x => x.PropSize.x * x.PropSize.y)
+                .Where(p => p != null && p.NearWallLeft && !p.OnlyCorner)
                 .ToList();
 
 
@@ -51,32 +51,28 @@ public class PropPlacementManager : MonoBehaviour
 
             //Place props near RIGHT wall
             List<Prop> rightWallProps = propsToPlace
-                .Where(x => x.NearWallRight && !x.Corner)
-                .OrderByDescending(x => x.PropSize.x * x.PropSize.y)
+                .Where(p => p != null && p.NearWallRight && !p.OnlyCorner)
                 .ToList();
 
             PlaceProps(room, rightWallProps, room.NearWallTilesRight, PlacementOriginCorner.TopRight);
 
             //Place props near UP wall
             List<Prop> topWallProps = propsToPlace
-                .Where(x => x.NearWallUP && !x.Corner)
-                .OrderByDescending(x => x.PropSize.x * x.PropSize.y)
+                .Where(p => p != null && p.NearWallUP && !p.OnlyCorner)
                 .ToList();
 
             PlaceProps(room, topWallProps, room.NearWallTilesUp, PlacementOriginCorner.TopLeft);
 
             //Place props near DOWN wall
             List<Prop> downWallProps = propsToPlace
-                .Where(x => x.NearWallDown && !x.Corner)
-                .OrderByDescending(x => x.PropSize.x * x.PropSize.y)
+                .Where(p => p != null && p.NearWallDown && !p.OnlyCorner)
                 .ToList();
 
             PlaceProps(room, downWallProps, room.NearWallTilesDown, PlacementOriginCorner.BottomLeft);
 
             //Place inner props
             List<Prop> innerProps = propsToPlace
-                .Where(x => x.Inner && !x.Corner)
-                .OrderByDescending(x => x.PropSize.x * x.PropSize.y)
+                .Where(p => p != null && p.Inner && !p.OnlyCorner)
                 .ToList();
             PlaceProps(room, innerProps, room.InnerTiles, PlacementOriginCorner.BottomLeft);
         }
@@ -114,8 +110,13 @@ public class PropPlacementManager : MonoBehaviour
 
             for (int i = 0; i < quantity; i++)
             {
-                if (UnityEngine.Random.value > propToPlace.spawnChance)
+                float chance = propToPlace.spawnChance;
+                if (chance > 1f) chance /= 100f;      // allow 0–100 inputs
+                chance = Mathf.Clamp01(chance);
+
+                if (UnityEngine.Random.value > chance)
                     continue;
+            
 
                 //remove taken positions
                 tempPositons.ExceptWith(room.PropPositions);
@@ -253,33 +254,80 @@ public class PropPlacementManager : MonoBehaviour
     /// <param name="cornerProps"></param>
     private void PlaceCornerProps(Room room, List<Prop> cornerProps)
     {
-        if (cornerProps == null || cornerProps.Count == 0)
-            return;
+        if (cornerProps == null || cornerProps.Count == 0) return;
 
-        float tempChance = cornerPropPlacementChance;
+        // If you have OnlyCorner, prioritize those (chests)
+        var priority = cornerProps
+            .Where(p => p != null)
+            .OrderByDescending(p => p.OnlyCorner)
+            .ToList();
 
-        foreach (Vector2Int cornerTile in room.CornerTiles)
+        foreach (var prop in priority)
         {
-            if (dungeonData.path.Contains(cornerTile)) continue;
-            if (room.PropPositions.Contains(cornerTile)) continue;
+            float chance = prop.spawnChance;
+            if (chance > 1f) chance /= 100f;
+            chance = Mathf.Clamp01(chance);
 
-            if (UnityEngine.Random.value < tempChance)
+            if (UnityEngine.Random.value > chance)
+                continue;
+
+            // Blob-friendly: place on boundary far from path
+            if (TryPlaceChestLikeProp(room, prop))
             {
-                Prop propToPlace = cornerProps[UnityEngine.Random.Range(0, cornerProps.Count)];
-
-                if (UnityEngine.Random.value > propToPlace.spawnChance)
-                    continue;
-
-                PlacePropGameObjectAt(room, cornerTile, propToPlace);
-
-                if (propToPlace.PlaceAsGroup)
-                    PlaceGroupObject(room, cornerTile, propToPlace, 2);
-            }
-            else
-            {
-                tempChance = Mathf.Clamp01(tempChance + 0.1f);
+                // only one chest-like prop per room
+                if (prop.OnlyCorner) break;
             }
         }
+    }
+
+
+    private object DistanceToClosestPath(Vector2Int from)
+    {
+        if (dungeonData == null || dungeonData.path == null || dungeonData.path.Count == 0)
+            return int.MaxValue;
+
+        int best = int.MaxValue;
+
+        foreach (var p in dungeonData.path)
+        {
+            int dist = Mathf.Abs(from.x - p.x) + Mathf.Abs(from.y - p.y); // Manhattan distance
+            if (dist < best)
+                best = dist;
+        }
+
+        return best;
+    }
+
+    private List<Vector2Int> GetChestCandidates(Room room)
+    {
+        // Use near-wall tiles (boundary of blob). Combine all sides.
+        var candidates = room.NearWallTilesUp
+            .Union(room.NearWallTilesDown)
+            .Union(room.NearWallTilesLeft)
+            .Union(room.NearWallTilesRight)
+            .ToList();
+
+        // Filter out path + occupied
+        candidates = candidates
+            .Where(t => !dungeonData.path.Contains(t))
+            .Where(t => !room.PropPositions.Contains(t))
+            .ToList();
+
+        return candidates;
+    }
+
+    private bool TryPlaceChestLikeProp(Room room, Prop chestProp)
+    {
+        var candidates = GetChestCandidates(room);
+        if (candidates.Count == 0) return false;
+
+        Vector2Int best = candidates
+            .OrderByDescending(t => DistanceToClosestPath(t))
+            .First();
+
+        PlacePropGameObjectAt(room, best, chestProp);
+        room.PropPositions.Add(best);
+        return true;
     }
 
     /// <summary>

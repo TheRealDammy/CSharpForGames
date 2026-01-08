@@ -66,22 +66,25 @@ public class RoomDataExtractor : MonoBehaviour
                 bool left = room.FloorTiles.Contains(tilePosition + Vector2Int.left);
                 bool right = room.FloorTiles.Contains(tilePosition + Vector2Int.right);
 
-                bool missingUp = !up;
-                bool missingDown = !down;
-                bool missingLeft = !left;
-                bool missingRight = !right;
-
-                // True corner = two missing perpendicular sides
-                bool isCorner =
-                    (missingUp && missingLeft) ||
-                    (missingUp && missingRight) ||
-                    (missingDown && missingLeft) ||
-                    (missingDown && missingRight);
-
-                // Optional: require at least 2 neighbours exist (filters corridor-ish shapes)
                 int neighbourCount = (up ? 1 : 0) + (down ? 1 : 0) + (left ? 1 : 0) + (right ? 1 : 0);
 
-                if (isCorner && neighbourCount == 2)
+                // Diagonals in each quadrant
+                bool upLeftDiag = room.FloorTiles.Contains(tilePosition + Vector2Int.up + Vector2Int.left);
+                bool upRightDiag = room.FloorTiles.Contains(tilePosition + Vector2Int.up + Vector2Int.right);
+                bool downLeftDiag = room.FloorTiles.Contains(tilePosition + Vector2Int.down + Vector2Int.left);
+                bool downRightDiag = room.FloorTiles.Contains(tilePosition + Vector2Int.down + Vector2Int.right);
+
+                // Convex L-corner = exactly 2 neighbours in an L-shape AND the diagonal outside is empty
+                bool isConvexCorner =
+                    neighbourCount == 2 &&
+                    (
+                        (up && left && !upLeftDiag) ||
+                        (up && right && !upRightDiag) ||
+                        (down && left && !downLeftDiag) ||
+                        (down && right && !downRightDiag)
+                    );
+
+                if (isConvexCorner)
                     room.CornerTiles.Add(tilePosition);
 
                 if (neighbourCount == 4)

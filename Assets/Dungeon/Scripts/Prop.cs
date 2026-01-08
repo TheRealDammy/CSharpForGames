@@ -33,4 +33,5 @@ public class Prop : ScriptableObject
 
     [Range(0, 1f)] public float spawnChance = 1f;
     public bool hasColliders = true;
+    public bool OnlyCorner;
 }

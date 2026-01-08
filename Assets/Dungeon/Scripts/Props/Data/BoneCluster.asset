@@ -27,3 +27,4 @@ MonoBehaviour:
   GroupMaxCount: 1
   spawnChance: 0.7
   hasColliders: 0
+  OnlyCorner: 1
