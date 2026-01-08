@@ -31,4 +31,6 @@ public class Prop : ScriptableObject
     [Min(1)]
     public int GroupMaxCount = 1;
 
+    [Range(0, 1f)] public float spawnChance = 1f;
+    public bool hasColliders = true;
 }

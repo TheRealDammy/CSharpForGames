@@ -34,6 +34,10 @@ public class Room
 {
     public Vector2 RoomCenterPos { get; set; }
     public HashSet<Vector2Int> FloorTiles { get; private set; } = new HashSet<Vector2Int>();
+    public void SetFloorTiles(HashSet<Vector2Int> newTiles)
+    {
+        FloorTiles = newTiles;
+    }
 
     public HashSet<Vector2Int> NearWallTilesUp { get; set; } = new HashSet<Vector2Int>();
     public HashSet<Vector2Int> NearWallTilesDown { get; set; } = new HashSet<Vector2Int>();

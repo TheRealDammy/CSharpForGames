@@ -27,7 +27,6 @@ public class AgentPlacer : MonoBehaviour
 
     public void PlaceAgents()
     {
-        Debug.Log("Placing Agents...");
         if (dungeonData == null)
             return;
 
@@ -89,17 +88,6 @@ public class AgentPlacer : MonoBehaviour
         entry = default;
         return false;
     }
-    
-    private Vector2Int GetPlayerSpawnTile(Room room)
-{
-    // Prefer inner tiles, else fallback to any floor tile
-    IEnumerable<Vector2Int> candidates = room.InnerTiles.Count > 0 ? room.InnerTiles : room.FloorTiles;
-    candidates = candidates
-        .Where(t => !dungeonData.path.Contains(t))
-        .Where(t => !room.PropPositions.Contains(t));
-
-    return candidates.OrderBy(_ => Guid.NewGuid()).First();
-}
 
     /// <summary>
     /// Places enemies in the positions accessible from the path

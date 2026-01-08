@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
@@ -66,8 +66,33 @@ public class RoomsFirstGenerator : RandomDungeonGenerator
         }
 
         // Paint tiles
-        tileMapGenerator.PaintFloorTiles(floorPositions);
-        WallGenerator.CreateWalls(floorPositions, tileMapGenerator);
+        // RAW = what rooms/corridors originally were
+        HashSet<Vector2Int> rawFloorPositions = new HashSet<Vector2Int>(floorPositions);
+
+        // FINAL = what you actually render + build walls from
+        HashSet<Vector2Int> finalFloorPositions = new HashSet<Vector2Int>(rawFloorPositions);
+
+        // Post-process FINAL only
+        WallGenerator.FillEnclosedHoles(finalFloorPositions);
+        SmoothFloor(finalFloorPositions, iterations: 1);
+
+        // IMPORTANT: update each room's FloorTiles to match FINAL (but don't eat corridors)
+        UpdateRoomsFromFinalFloor(generatedRooms, finalFloorPositions, corridors);
+
+        // Store into DungeonData (after update)
+        if (dungeonData != null)
+        {
+            dungeonData.rooms = generatedRooms;
+            dungeonData.path = corridors;
+        }
+
+        // Paint and walls use FINAL
+        tileMapGenerator.PaintFloorTiles(finalFloorPositions);
+        WallGenerator.CreateWalls(finalFloorPositions, tileMapGenerator);
+
+        // Now extractor matches visuals
+        if (roomDataExtractor != null)
+            roomDataExtractor.ProcessRooms();
 
         // Run extractor AFTER dungeon data is ready
         if (roomDataExtractor != null)
@@ -75,8 +100,6 @@ public class RoomsFirstGenerator : RandomDungeonGenerator
             roomDataExtractor.ProcessRooms();
             Debug.Log($"EXTRACTOR dungeonData: {dungeonData?.name}");
         }
-
-
     }
 
     private (HashSet<Vector2Int> allFloors, List<Room> rooms) CreateRoomsAndData(List<BoundsInt> roomsBounds)
@@ -100,7 +123,7 @@ public class RoomsFirstGenerator : RandomDungeonGenerator
             allFloors.UnionWith(roomFloors);
 
             Vector2 center = new Vector2(bounds.center.x, bounds.center.y);
-            rooms.Add(new Room(center, roomFloors));
+            rooms.Add(new Room(center, (System.Collections.Generic.HashSet<UnityEngine.Vector2Int>)roomFloors));
         }
 
         return (allFloors, rooms);
@@ -220,5 +243,88 @@ public class RoomsFirstGenerator : RandomDungeonGenerator
         }
 
         return closest;
+    }
+
+    private static readonly Vector2Int[] CardinalDirs =
+    {
+        Vector2Int.up, Vector2Int.right, Vector2Int.down, Vector2Int.left
+    };
+
+    private static void SmoothFloor(HashSet<Vector2Int> floorPositions, int iterations = 1)
+    {
+        for (int it = 0; it < iterations; it++)
+        {
+            var toAdd = new HashSet<Vector2Int>();
+
+            // compute bounds
+            int minX = int.MaxValue, minY = int.MaxValue, maxX = int.MinValue, maxY = int.MinValue;
+            foreach (var p in floorPositions)
+            {
+                if (p.x < minX) minX = p.x;
+                if (p.y < minY) minY = p.y;
+                if (p.x > maxX) maxX = p.x;
+                if (p.y > maxY) maxY = p.y;
+            }
+            minX -= 1; minY -= 1; maxX += 1; maxY += 1;
+
+            for (int x = minX; x <= maxX; x++)
+            {
+                for (int y = minY; y <= maxY; y++)
+                {
+                    var pos = new Vector2Int(x, y);
+                    if (floorPositions.Contains(pos)) continue;
+
+                    int n = 0;
+                    foreach (var d in CardinalDirs)
+                        if (floorPositions.Contains(pos + d)) n++;
+
+                    // 3+ neighbours = it's basically a dent → fill
+                    if (n >= 3) toAdd.Add(pos);
+                }
+            }
+
+            floorPositions.UnionWith(toAdd);
+        }
+    }
+
+    private static void UpdateRoomsFromFinalFloor(
+    List<Room> rooms,
+    HashSet<Vector2Int> finalFloor,
+    HashSet<Vector2Int> corridors)
+    {
+        foreach (var room in rooms)
+        {
+            if (room.FloorTiles.Count == 0) continue;
+
+            // Compute a bounds box from the original room tiles
+            int minX = int.MaxValue, minY = int.MaxValue, maxX = int.MinValue, maxY = int.MinValue;
+            foreach (var p in room.FloorTiles)
+            {
+                if (p.x < minX) minX = p.x;
+                if (p.y < minY) minY = p.y;
+                if (p.x > maxX) maxX = p.x;
+                if (p.y > maxY) maxY = p.y;
+            }
+
+            // Small pad so smoothing/fill doesn't get clipped
+            int pad = 2;
+            minX -= pad; minY -= pad; maxX += pad; maxY += pad;
+
+            var newRoomTiles = new HashSet<Vector2Int>();
+
+            for (int x = minX; x <= maxX; x++)
+            {
+                for (int y = minY; y <= maxY; y++)
+                {
+                    var pos = new Vector2Int(x, y);
+
+                    // Must be part of final floor, but not part of corridor path
+                    if (finalFloor.Contains(pos) && !corridors.Contains(pos))
+                        newRoomTiles.Add(pos);
+                }
+            }
+
+            room.SetFloorTiles(newRoomTiles);
+        }
     }
 }

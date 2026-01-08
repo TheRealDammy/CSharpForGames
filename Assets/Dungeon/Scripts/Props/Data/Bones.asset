@@ -10,18 +10,20 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: e194b494d70fe3247896986307f34b71, type: 3}
-  m_Name: Firelamp_Lit_Big
+  m_Name: Bones
   m_EditorClassIdentifier: 
-  PropSprite: {fileID: 21300000, guid: a7943b40262bc2c41916b93709d7de2d, type: 2}
+  PropSprite: {fileID: 21300000, guid: e4c073ff045d2974d928f96885faeaf1, type: 2}
   PropSize: {x: 1, y: 1}
   Corner: 1
-  NearWallUP: 0
-  NearWallDown: 0
-  NearWallRight: 0
-  NearWallLeft: 0
-  Inner: 0
-  PlacementQuantityMin: 1
-  PlacementQuantityMax: 1
+  NearWallUP: 1
+  NearWallDown: 1
+  NearWallRight: 1
+  NearWallLeft: 1
+  Inner: 1
+  PlacementQuantityMin: 50
+  PlacementQuantityMax: 50
   PlaceAsGroup: 0
   GroupMinCount: 1
   GroupMaxCount: 1
+  spawnChance: 1
+  hasColliders: 0
