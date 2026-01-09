@@ -5,6 +5,17 @@ Top-down 2D dungeon crawler prototype in Unity, focused on **procedural dungeon 
 ## Current milestone
 ✅ Procedural dungeon generation implemented (rooms + corridors, fully navigable layouts)
 
+## Procedural Generation (Random Walk + BSP)
+
+This project supports two generation styles:
+
+- **Random Walk**: carves organic cave-like layouts by randomly walking on a grid and marking tiles as floor.
+- **BSP (Binary Space Partitioning)**: splits the map into partitions, places rooms, and connects them with corridors for a structured dungeon layout.
+
+Both pipelines convert the result into floor/wall tile data and render it to **Unity Tilemaps**.
+The goal is “controlled randomness”: different runs, but still reliable for gameplay and future systems (enemies, loot, encounters).
+
+
 ## How the generation works (plain English)
 The dungeon is built in stages:
 1. Place rooms on a grid
