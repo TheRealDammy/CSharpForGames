@@ -18,11 +18,6 @@ Goal: **controlled randomness** — each run is different, but the dungeon stays
 - Unity 2D + Tilemaps
 - C#
 
-## Screenshots
-Add screenshots here once you have them:
-- `docs/images/dungeon-layout.png`
-- `docs/images/debug-overlay.png`
-
 ## Next steps
 - Player controller + combat loop
 - Enemy spawning + simple AI
