@@ -12,6 +12,7 @@ public class RoomsFirstGenerator : RandomDungeonGenerator
     [SerializeField][Range(0, 10)] private int offset = 1;
     [SerializeField] private bool randomRoomPlacement = false;
     [SerializeField] private RoomDataExtractor roomDataExtractor;
+    [SerializeField] private AgentPlacer agentPlacer;
 
     private void Start()
     {
@@ -63,6 +64,12 @@ public class RoomsFirstGenerator : RandomDungeonGenerator
         {
             dungeonData.rooms = generatedRooms;
             dungeonData.path = corridors; // treat corridors as path
+
+            if (agentPlacer != null)
+            {
+                agentPlacer.Init(dungeonData);
+                agentPlacer.PlaceAgents();
+            }
         }
 
         // Paint tiles

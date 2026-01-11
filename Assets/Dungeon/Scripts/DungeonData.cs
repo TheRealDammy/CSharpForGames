@@ -17,7 +17,7 @@ public class DungeonData : MonoBehaviour
             }
             foreach (var item in room.EnemiesInTheRoom)
             {
-                Destroy(item);
+                DestroyImmediate(item);
             }
         }
         rooms = new();

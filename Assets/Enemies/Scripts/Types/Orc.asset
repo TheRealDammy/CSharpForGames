@@ -1,0 +1,49 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1820e6cccb0fa534abee2ea851a7ac9b, type: 3}
+  m_Name: Orc
+  m_EditorClassIdentifier: 
+  enemyName: Orc
+  defaultSprite: {fileID: 3459547899722000283, guid: c409aed310d55df4f9e45632e0a9c3c1, type: 3}
+  baseHP: 40
+  baseDamage: 20
+  moveSpeed: 3
+  aggroRange: 6
+  attackRange: 0.8
+  attackCooldown: 1.2
+  spawnWeight: 6
+  prefersGroups: 1
+  groupMin: 2
+  groupMax: 5
+  groupChance: 0.6
+  variants:
+  - hpMultiplier: 0
+    damageMultiplier: 0
+    speedMultiplier: 0
+    spawnWeight: 60
+    scaleMultiplier: 0
+    spriteOverride: {fileID: 0}
+    animatorOverride: {fileID: 0}
+  - hpMultiplier: 0.5
+    damageMultiplier: 0.5
+    speedMultiplier: 0.5
+    spawnWeight: 30
+    scaleMultiplier: 0
+    spriteOverride: {fileID: 4457886117139728611, guid: 551895ab32bd2c94c81b0cf75f304ccc, type: 3}
+    animatorOverride: {fileID: 0}
+  - hpMultiplier: 1
+    damageMultiplier: 1
+    speedMultiplier: 1
+    spawnWeight: 10
+    scaleMultiplier: 0
+    spriteOverride: {fileID: -1508233907065511518, guid: 3aadf0d9c81319248b4de9e27230fd75, type: 3}
+    animatorOverride: {fileID: 0}

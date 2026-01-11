@@ -11,7 +11,7 @@ GameObject:
   - component: {fileID: 6838310573072449258}
   - component: {fileID: 2705007613533483770}
   - component: {fileID: 6167140129344491955}
-  m_Layer: 5
+  m_Layer: 7
   m_Name: Fill
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -87,7 +87,7 @@ GameObject:
   - component: {fileID: 5469242766726568776}
   - component: {fileID: 8073411267926296484}
   - component: {fileID: 18272879469655693}
-  m_Layer: 0
+  m_Layer: 7
   m_Name: Camera
   m_TagString: MainCamera
   m_Icon: {fileID: 0}
@@ -223,7 +223,7 @@ GameObject:
   - component: {fileID: 109871059991103353}
   - component: {fileID: 8923797763212075305}
   - component: {fileID: 4044830628858142260}
-  m_Layer: 5
+  m_Layer: 7
   m_Name: Background
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -301,9 +301,9 @@ GameObject:
   - component: {fileID: 2214242707036366683}
   - component: {fileID: 2885730017012782363}
   - component: {fileID: 1106255121963960227}
-  - component: {fileID: 6789823076989733004}
   - component: {fileID: 2170201732609160039}
-  m_Layer: 0
+  - component: {fileID: 6340326483365297396}
+  m_Layer: 7
   m_Name: Character
   m_TagString: Player
   m_Icon: {fileID: 0}
@@ -508,20 +508,6 @@ SpriteRenderer:
   m_WasSpriteAssigned: 1
   m_MaskInteraction: 0
   m_SpriteSortPoint: 0
---- !u!114 &6789823076989733004
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5037897824401233943}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: d68ad49a7b99e7144af12b208278dda2, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  maxHealth: 100
-  healthBar: {fileID: 6167140129344491955}
 --- !u!114 &2170201732609160039
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -534,6 +520,22 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8db6d1f047988cc409c82bc8978e4642, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+--- !u!114 &6340326483365297396
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5037897824401233943}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f55e7dfe279e44049a7ceb79ee8b626e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  maxHealth: 100
+  iFrames: 0.5
+  flashTime: 0.06
+  healthBar: {fileID: 6167140129344491955}
 --- !u!1 &7226892385963807488
 GameObject:
   m_ObjectHideFlags: 0
@@ -546,7 +548,7 @@ GameObject:
   - component: {fileID: 3653732540644752934}
   - component: {fileID: 3620778596708994492}
   - component: {fileID: 2620283581577617387}
-  m_Layer: 5
+  m_Layer: 7
   m_Name: PlayerHUD
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -646,7 +648,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 317883954338507867}
-  m_Layer: 0
+  m_Layer: 7
   m_Name: FirePoint
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -677,7 +679,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 259227951496054826}
-  m_Layer: 0
+  m_Layer: 7
   m_Name: AttackOrigin
   m_TagString: Untagged
   m_Icon: {fileID: 0}

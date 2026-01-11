@@ -1,0 +1,46 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1820e6cccb0fa534abee2ea851a7ac9b, type: 3}
+  m_Name: Slime
+  m_EditorClassIdentifier: 
+  enemyName: Slime
+  defaultSprite: {fileID: -7294240746080377788, guid: c2456e0f5e6e83b47a5624ac2e6e087b, type: 3}
+  baseHP: 60
+  baseDamage: 10
+  moveSpeed: 2
+  aggroRange: 6
+  attackRange: 1.1
+  attackCooldown: 0.8
+  spawnWeight: 6
+  prefersGroups: 1
+  groupMin: 2
+  groupMax: 5
+  groupChance: 0.6
+  variants:
+  - hpMultiplier: 0
+    damageMultiplier: 0
+    speedMultiplier: 0
+    spawnWeight: 70
+    scaleMultiplier: 0
+    spriteOverride: {fileID: 0}
+  - hpMultiplier: 0.5
+    damageMultiplier: 0.5
+    speedMultiplier: 0.5
+    spawnWeight: 25
+    scaleMultiplier: 0
+    spriteOverride: {fileID: -2863241958341551144, guid: 94629c8000b50b0409aee933bf963ab8, type: 3}
+  - hpMultiplier: 1
+    damageMultiplier: 1
+    speedMultiplier: 1
+    spawnWeight: 5
+    scaleMultiplier: 0
+    spriteOverride: {fileID: 3726720421939613768, guid: 7ff225a52c9c9184ca223729ed085d4c, type: 3}
