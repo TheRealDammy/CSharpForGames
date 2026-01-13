@@ -91,7 +91,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 35b5c87e542bee447b27d7a6d9f7f223, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  flashTime: 0.06
+  flashTime: 1
+  destroyDelay: 1.5
+  hurtTrigger: Hurt
+  deadTrigger: Dead
 --- !u!1001 &5532237318196634348
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -154,11 +157,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4421238698378843699, guid: 8cd8f96e5a3c06543aef1c0c72d6bffa, type: 3}
       propertyPath: m_Size.x
-      value: 8
+      value: 10
       objectReference: {fileID: 0}
     - target: {fileID: 4421238698378843699, guid: 8cd8f96e5a3c06543aef1c0c72d6bffa, type: 3}
       propertyPath: m_Size.y
-      value: 8
+      value: 10
       objectReference: {fileID: 0}
     - target: {fileID: 4421238698378843699, guid: 8cd8f96e5a3c06543aef1c0c72d6bffa, type: 3}
       propertyPath: m_SpriteTilingProperty.oldSize.x

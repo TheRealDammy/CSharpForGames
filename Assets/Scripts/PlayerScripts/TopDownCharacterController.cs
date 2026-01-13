@@ -49,7 +49,6 @@ public class TopDownCharacterController : MonoBehaviour
     [SerializeField] private Transform projectileSpawnPoint;
     [SerializeField] private float projectileSpeed;
     [SerializeField] private float fireRate;
-    private float nextFireTime = 0f;
 
     [Header("Attack")]
     [SerializeField] private int damage = 1;
@@ -157,8 +156,7 @@ public class TopDownCharacterController : MonoBehaviour
         if (canSprint == true)
         {
             if (sprintAction.IsPressed())
-            {
-                
+            {            
                 stamina -= sprintCost * Time.deltaTime;
                 stamina = Mathf.Clamp(stamina, minStamina, maxStamina);
                 if (stamina <= 0f)
@@ -187,7 +185,6 @@ public class TopDownCharacterController : MonoBehaviour
         if (attackAction.IsPressed())
         {
             TryAttack();
-            animator.SetTrigger("Attack");
             playerDirection = Vector2.zero; // stop movement when attacking
         }
     }
@@ -215,7 +212,8 @@ public class TopDownCharacterController : MonoBehaviour
     {
         if (Time.time < lastAttackTime + cooldown) return;
         lastAttackTime = Time.time;
-        
+
+        animator.SetTrigger("Attack");
 
         Vector2 origin = attackOrigin != null ? (Vector2)attackOrigin.position : (Vector2)transform.position;
         Vector2 center = origin + playerDirection.normalized * range;

@@ -11897,6 +11897,7 @@ MonoBehaviour:
   elitePackSize: {x: 2, y: 4}
   groupRadius: 2
   showGizmo: 1
+  verboseLogs: 0
 --- !u!4 &999963230
 Transform:
   m_ObjectHideFlags: 0

@@ -6,7 +6,7 @@ public class EnemyController : MonoBehaviour
 {
     [Header("Runtime")]
     [SerializeField] private Transform target;
-    [SerializeField] private LayerMask hitLayers;  // set to Player layer in inspector
+    [SerializeField] private LayerMask hitLayers;
     [SerializeField] private bool isInitialized;
 
     private Rigidbody2D rb;
@@ -60,7 +60,7 @@ public class EnemyController : MonoBehaviour
         if (animator != null)
         {
             float speed01 = rb != null && rb.linearVelocity.sqrMagnitude > 0.001f ? 1f : 0f;
-            animator.SetFloat("Speed", speed01);
+            animator.SetFloat("Speed", facingDir.magnitude);
             animator.SetFloat("Horizontal", facingDir.x);
             animator.SetFloat("Vertical", facingDir.y);
         }
