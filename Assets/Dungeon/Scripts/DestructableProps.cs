@@ -1,3 +1,4 @@
+using System.Collections;
 using UnityEngine;
 
 public class DestructibleProp : MonoBehaviour, IDamageable
@@ -14,24 +15,30 @@ public class DestructibleProp : MonoBehaviour, IDamageable
         owningRoom = room;
         dungeonData = dungeon;
         anchorTile = placedTile;
-        hp = Mathf.Max(1, data.MaxHP);
+        hp = propData.MaxHP;
     }
 
     public void TakeDamage(int amount, Vector2 hitPoint, Vector2 hitDirection)
     {
         hp -= Mathf.Max(1, amount);
         if (hp <= 0)
+        {
             Break();
+        }
     }
 
     private void Break()
     {
+        Vector2 explosionPosition = anchorTile;
+
+        VFXManager.CreateExplosion(explosionPosition);
+
         if (owningRoom != null)
         {
             owningRoom.PropObjectReferences.Remove(gameObject);
             owningRoom.PropPositions.Remove(anchorTile); // assumes 1x1 destructibles
         }
 
-        Destroy(gameObject);
+        Destroy(gameObject);  
     }
 }

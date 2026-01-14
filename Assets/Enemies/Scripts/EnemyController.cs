@@ -61,6 +61,7 @@ public class EnemyController : MonoBehaviour
         {
             animator.SetFloat("Horizontal", facingDir.x);
             animator.SetFloat("Vertical", facingDir.y);
+
         }
     }
 

@@ -28,6 +28,7 @@ public class MenuManager : MonoBehaviour
     public void LoadLevel()
     {
         UnityEngine.SceneManagement.SceneManager.LoadSceneAsync("DevelopmentScene");
+        UnityEngine.SceneManagement.SceneManager.LoadSceneAsync("DungeonScene");
     }
 
     public void QuitGame()
