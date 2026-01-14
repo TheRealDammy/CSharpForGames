@@ -17,14 +17,14 @@ public class TopDownCharacterController : MonoBehaviour
     //The inputs that we need to retrieve from the input system.
     private InputAction moveAction;
     private InputAction attackAction;
-    private InputAction sprintAction;
+    public InputAction sprintAction;
 
     //The components that we need to edit to make the player move smoothly.
     private Animator animator;
     private Rigidbody2D m_rigidbody;
     
     //The direction that the player is moving in.
-    private Vector2 playerDirection;
+    public Vector2 playerDirection;
     private Vector2 lastDirection;
    
 
@@ -36,13 +36,6 @@ public class TopDownCharacterController : MonoBehaviour
     [SerializeField] private float sprintSpeed = 400f;
 
     #endregion
-
-    private float minStamina = 0f;
-    private float maxStamina = 100f;
-    private float stamina = 100f;
-    private float staminaRegen = 20f;
-    private float sprintCost = 30f;
-    private bool canSprint = false;
 
     [Header("Projectile parameters")]
     [SerializeField] private GameObject projectilePrefab;
@@ -68,6 +61,8 @@ public class TopDownCharacterController : MonoBehaviour
     private float lastAttackTime = -999f;
     private bool isAttacking = false;
 
+    private Stamina staminacComponent;
+
     /// <summary>
     /// When the script first initialises this gets called.
     /// Use this for grabbing components and setting up input bindings.
@@ -82,6 +77,7 @@ public class TopDownCharacterController : MonoBehaviour
         //get components from Character game object so that we can use them later.
         animator = GetComponent<Animator>();
         m_rigidbody = GetComponent<Rigidbody2D>();
+        staminacComponent = GetComponent<Stamina>();
     }
 
     /// <summary>
@@ -144,43 +140,29 @@ public class TopDownCharacterController : MonoBehaviour
         {
             animator.SetFloat("Horizontal", playerDirection.x);
             animator.SetFloat("Vertical", playerDirection.y);
-            canSprint = true;
 
             lastDirection = playerDirection;
         }
-        else 
-        {
-            canSprint = false;
-        }
 
-        if (canSprint == true)
+        if (sprintAction.IsPressed())
         {
-            if (sprintAction.IsPressed())
-            {            
-                stamina -= sprintCost * Time.deltaTime;
-                stamina = Mathf.Clamp(stamina, minStamina, maxStamina);
-                if (stamina <= 0f)
-                {
-                    canSprint = false;
-                    Debug.Log("Out of stamina!");
-                    playerSpeed = 200f;
-                }
-                else
-                {
-                    Debug.Log("Stamina: " + stamina);
-                    playerSpeed = sprintSpeed;
-                }
-            }
+            
+            if (staminacComponent != null)
+            {
+                playerSpeed = sprintSpeed;
+                staminacComponent.UpdateStamina();
+                Debug.Log("Using Stamina");
+            }             
         }
         else
         {
-            if (stamina < 100f)
+            if (staminacComponent != null)
             {
-                stamina += staminaRegen * Time.deltaTime;
-                Debug.Log("Stamina: " + stamina);
-            }
-            playerSpeed = 200f;
+                staminacComponent.UpdateStamina();
+                playerSpeed = 200f;
+            }       
         }
+
         // check if an attack has been triggered.
         if (attackAction.IsPressed())
         {

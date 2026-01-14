@@ -18,16 +18,18 @@ public class AgentPlacer : MonoBehaviour
 
     [Header("Distribution")]
     [Tooltip("Minimum Manhattan distance between chosen spawn tiles (relaxes if needed).")]
-    [SerializeField] private int minSpacing = 3;
+    [SerializeField] private int minSpacing = 4;
 
-    [Tooltip("0=random, 1=prefer inner tiles")]
-    [SerializeField, Range(0f, 1f)] private float centerBias = 0.7f;
+    [Tooltip("0=prefer room interior, 1=prefer near walls (keep this low).")]
+    [SerializeField, Range(0f, 1f)] private float edgeBias = 0.15f;
 
-    [Tooltip("0=prefer inner, 1=prefer corridor tiles")]
-    [SerializeField, Range(0f, 1f)] private float corridorBias = 0.35f;
+    [Header("Corridor spawns")]
+    [SerializeField, Range(0f, 1f)] private float corridorSpawnShare = 0.35f; // share of extra spawns in corridors
+    [SerializeField] private int corridorMinSpacing = 5;
+    [SerializeField] private bool allowCorridorSpawns = true;
 
     [Header("Fallback if roomEnemiesCount missing/0")]
-    [SerializeField] private Vector2Int enemiesPerRoomRange = new Vector2Int(1, 4);
+    [SerializeField] private Vector2Int enemiesPerRoomRange = new Vector2Int(2, 6);
     [SerializeField] private bool guaranteeAtLeastOneEnemyPerRoom = true;
 
     [Header("Room difficulty")]
@@ -52,6 +54,9 @@ public class AgentPlacer : MonoBehaviour
 
     private DungeonData dungeonData;
 
+    // Global reserved positions (rooms + corridors) to prevent overlaps.
+    private readonly HashSet<Vector2Int> reserved = new HashSet<Vector2Int>();
+
     private static readonly Vector2Int[] dirs =
     {
         Vector2Int.up, Vector2Int.right, Vector2Int.down, Vector2Int.left
@@ -61,7 +66,8 @@ public class AgentPlacer : MonoBehaviour
 
     public void PlaceAgents()
     {
-        // Defensive: make sure data exists
+        reserved.Clear();
+
         if (dungeonData == null || dungeonData.rooms == null || dungeonData.rooms.Count == 0)
         {
             Debug.LogError("AgentPlacer: dungeonData/rooms not ready", this);
@@ -78,7 +84,7 @@ public class AgentPlacer : MonoBehaviour
             return;
         }
 
-        // Sanitize enemyTypes (null entries cause weird picks)
+        // Clean enemy list
         enemyTypes = enemyTypes.Where(e => e != null).ToList();
         if (enemyTypes.Count == 0)
         {
@@ -88,59 +94,63 @@ public class AgentPlacer : MonoBehaviour
 
         if (verboseLogs)
         {
-            Debug.Log("EnemyTypes in list: " + string.Join(", ",
-                enemyTypes.Select(e => e ? $"{e.name} (w={e.spawnWeight})" : "NULL")));
+            Debug.Log("EnemyTypes: " + string.Join(", ", enemyTypes.Select(e => $"{e.name}(w={e.spawnWeight})")));
         }
 
-        SpawnPlayer();
+        // Pre-reserve all prop tiles (so enemies never overlap props).
+        CacheReservedFromProps();
 
-        // Spawn enemies per room
+        // Spawn player first
+        SpawnPlayer();
+        if (dungeonData.PlayerReference == null)
+        {
+            Debug.LogError("AgentPlacer: PlayerReference not set after SpawnPlayer()", this);
+            return;
+        }
+
+        // Build counts first (so corridor spawns can be proportional)
+        List<int> countsPerRoom = new List<int>();
+        int totalRoomEnemies = 0;
+
+        for (int i = 0; i < dungeonData.rooms.Count; i++)
+        {
+            int c = GetEnemyCountForRoom(i);
+            if (i == playerRoomIndex) c = 0;
+            countsPerRoom.Add(Mathf.Max(0, c));
+            totalRoomEnemies += Mathf.Max(0, c);
+        }
+
+        // Spawn per room
         for (int i = 0; i < dungeonData.rooms.Count; i++)
         {
             Room room = dungeonData.rooms[i];
+            int countForRoom = countsPerRoom[i];
+            if (countForRoom <= 0) continue;
 
-            // Build accessible tiles using BFS from entry
-            if (!TryBuildAccessibleTiles(room))
-            {
-                // If BFS couldn't run (no entry tile), fall back to room floor tiles
-                // so rooms still get enemies (especially with blobs).
-                room.PositionsAccessibleFromPath = room.FloorTiles
-                    .Where(t => !room.PropPositions.Contains(t))
-                    .OrderBy(_ => Guid.NewGuid())
-                    .ToList();
-            }
+            // Build accessible tiles using BFS; if fails, use all floor tiles.
+            EnsureRoomAccessibleTiles(room);
 
-            int countForRoom = GetEnemyCountForRoom(i);
+            float difficulty = ComputeRoomDifficulty(i);
+            PlaceEnemiesSmart(room, countForRoom, difficulty);
+        }
 
-            // Skip player room
-            if (i == playerRoomIndex) countForRoom = 0;
-
-            if (countForRoom > 0)
-            {
-                float difficulty = ComputeRoomDifficulty(i);
-                PlaceEnemiesSmart(room, countForRoom, difficulty);
-            }
+        // Corridor spawns as "extra action" (doesn't steal from rooms)
+        if (allowCorridorSpawns && corridorSpawnShare > 0f)
+        {
+            int corridorCount = Mathf.RoundToInt(totalRoomEnemies * corridorSpawnShare);
+            SpawnCorridorEnemies(corridorCount);
         }
     }
 
-    private bool TryBuildAccessibleTiles(Room room)
+    private void CacheReservedFromProps()
     {
-        if (room == null || room.FloorTiles == null || room.FloorTiles.Count == 0)
-            return false;
-
-        // Find entry tile adjacent to corridor
-        if (!TryGetRoomEntry(room, out var entryTile))
-            return false;
-
-        // BFS within room from entry, avoiding props
-        var graph = new RoomGraph(room.FloorTiles);
-        Dictionary<Vector2Int, int> visited = graph.RunBFS(entryTile, room.PropPositions);
-
-        room.PositionsAccessibleFromPath = visited.Keys
-            .OrderBy(_ => Guid.NewGuid())
-            .ToList();
-
-        return room.PositionsAccessibleFromPath.Count > 0;
+        reserved.Clear();
+        foreach (var r in dungeonData.rooms)
+        {
+            if (r?.PropPositions == null) continue;
+            foreach (var p in r.PropPositions)
+                reserved.Add(p);
+        }
     }
 
     private int GetEnemyCountForRoom(int roomIndex)
@@ -172,6 +182,7 @@ public class AgentPlacer : MonoBehaviour
         if (playerRoomIndex < 0 || playerRoomIndex >= dungeonData.rooms.Count) return;
 
         Room playerRoom = dungeonData.rooms[playerRoomIndex];
+        if (playerRoom == null || playerRoom.FloorTiles == null || playerRoom.FloorTiles.Count == 0) return;
 
         Vector2Int spawnTile =
             (playerRoom.InnerTiles != null && playerRoom.InnerTiles.Count > 0)
@@ -181,11 +192,53 @@ public class AgentPlacer : MonoBehaviour
         GameObject player = Instantiate(playerPrefab);
         player.transform.position = (Vector2)spawnTile + Vector2.one * 0.5f;
         dungeonData.PlayerReference = player;
+
+        // Reserve player tile
+        reserved.Add(spawnTile);
+    }
+
+    private void EnsureRoomAccessibleTiles(Room room)
+    {
+        if (room == null) return;
+
+        // If already built and non-empty, keep it
+        if (room.PositionsAccessibleFromPath != null && room.PositionsAccessibleFromPath.Count > 0)
+            return;
+
+        // Try BFS from entry
+        if (TryGetRoomEntry(room, out var entryTile))
+        {
+            var graph = new RoomGraph(room.FloorTiles);
+            Dictionary<Vector2Int, int> visited = graph.RunBFS(entryTile, GetRoomOccupied(room));
+            room.PositionsAccessibleFromPath = visited.Keys.OrderBy(_ => Guid.NewGuid()).ToList();
+        }
+
+        // If still empty, fallback to entire floor
+        if (room.PositionsAccessibleFromPath == null || room.PositionsAccessibleFromPath.Count == 0)
+        {
+            room.PositionsAccessibleFromPath = room.FloorTiles
+                .Where(t => !reserved.Contains(t))
+                .OrderBy(_ => Guid.NewGuid())
+                .ToList();
+        }
+    }
+
+    private HashSet<Vector2Int> GetRoomOccupied(Room room)
+    {
+        // Combine global reserved + room props (room props should already be in reserved, but safe)
+        var occ = new HashSet<Vector2Int>(reserved);
+        if (room?.PropPositions != null) occ.UnionWith(room.PropPositions);
+        return occ;
     }
 
     private bool TryGetRoomEntry(Room room, out Vector2Int entry)
     {
-        // A room tile is "entry" if it's inside room and adjacent to a corridor tile.
+        if (room?.FloorTiles == null)
+        {
+            entry = default;
+            return false;
+        }
+
         foreach (var tile in room.FloorTiles)
         {
             foreach (var d in dirs)
@@ -203,53 +256,44 @@ public class AgentPlacer : MonoBehaviour
     }
 
     // ---------------------------
-    // SMART SPAWNING
+    // SMART SPAWNING (ROOMS)
     // ---------------------------
 
     private void PlaceEnemiesSmart(Room room, int enemyCount, float difficulty)
     {
+        if (room == null) return;
         if (dungeonData.PlayerReference == null) return;
         if (room.PositionsAccessibleFromPath == null || room.PositionsAccessibleFromPath.Count == 0) return;
 
-        // Candidate tiles: allow corridors too, only exclude prop tiles
+        // Candidates: room accessible tiles excluding reserved
         var candidates = room.PositionsAccessibleFromPath
-            .Where(t => !room.PropPositions.Contains(t))
+            .Where(t => !reserved.Contains(t))
             .Distinct()
             .ToList();
 
         if (candidates.Count == 0) return;
 
-        HashSet<Vector2Int> inner = room.InnerTiles ?? new HashSet<Vector2Int>();
+        // Score tiles: prefer “middle-ish” tiles by distance from wall, but keep some randomness
+        candidates = candidates
+            .OrderByDescending(t =>
+            {
+                float rnd = UnityEngine.Random.value;
+                float central = DistanceFromWall(room, t) / 4f; // 0.25 edge .. 1 center-ish
+                float mixed = Mathf.Lerp(central, 1f - central, edgeBias); // edgeBias pushes slightly toward edges if wanted
+                return rnd + mixed;
+            })
+            .ToList();
 
-        // Score tiles: randomness + inner bias + corridor bias
-        candidates = candidates.OrderByDescending(t =>
-        {
-            float rand = UnityEngine.Random.value;
+        // Spread tiles using farthest-point sampling from centroid (prevents corner clumps)
+        List<Vector2Int> chosen = PickFarthestPointSpread(candidates, enemyCount, minSpacing);
 
-            float innerScore = inner.Contains(t) ? 1f : 0f;
-            float pathScore = dungeonData.path.Contains(t) ? 1f : 0f;
-
-            // mix inner vs corridor
-            float biased = Mathf.Lerp(innerScore, pathScore, corridorBias);
-
-            // then blend with random
-            float mix = Mathf.Lerp(rand, rand + biased, 0.6f);
-
-            // apply centerBias to slightly favor inner tiles overall
-            return Mathf.Lerp(mix, mix + innerScore, centerBias * 0.35f);
-        }).ToList();
-
-        // Pick spread tiles (farthest-point-ish)
-        List<Vector2Int> chosen = PickSpreadTiles(candidates, enemyCount, minSpacing);
-
-        // If too few, fill remaining (no spacing)
+        // Fill if still short
         if (chosen.Count < enemyCount)
             chosen.AddRange(candidates.Except(chosen).Take(enemyCount - chosen.Count));
 
         float eliteChance = Mathf.Lerp(elitePackChanceBase, elitePackChanceMax,
             Mathf.InverseLerp(1f, 3f, difficulty));
 
-        // anti-streak to stop "only slimes"
         EnemyTypeSO lastType = null;
 
         int idx = 0;
@@ -268,10 +312,12 @@ public class AgentPlacer : MonoBehaviour
                 continue;
             }
 
-            // Group behavior
+            // Group
             EnemyTypeSO groupType = PickTypeWithAntiStreak(lastType);
-            if (groupType != null && groupType.prefersGroups &&
-                UnityEngine.Random.value < groupType.groupChance && remaining >= 2)
+            if (groupType != null &&
+                groupType.prefersGroups &&
+                UnityEngine.Random.value < groupType.groupChance &&
+                remaining >= 2)
             {
                 int groupSize = UnityEngine.Random.Range(groupType.groupMin, groupType.groupMax + 1);
                 groupSize = Mathf.Clamp(groupSize, 2, remaining);
@@ -288,19 +334,99 @@ public class AgentPlacer : MonoBehaviour
         }
     }
 
+    private int DistanceFromWall(Room room, Vector2Int tile)
+    {
+        // Cheap "centrality": count how many 4-neighbours exist.
+        // 4 = interior-ish, 1/2 = boundary-ish
+        int missing = 0;
+        if (!room.FloorTiles.Contains(tile + Vector2Int.up)) missing++;
+        if (!room.FloorTiles.Contains(tile + Vector2Int.down)) missing++;
+        if (!room.FloorTiles.Contains(tile + Vector2Int.left)) missing++;
+        if (!room.FloorTiles.Contains(tile + Vector2Int.right)) missing++;
+        return 4 - missing;
+    }
+
+    // ---------------------------
+    // CORRIDOR SPAWNS
+    // ---------------------------
+
+    private void SpawnCorridorEnemies(int count)
+    {
+        if (count <= 0) return;
+
+        var corridorCandidates = GetCorridorCandidates();
+        if (corridorCandidates.Count == 0) return;
+
+        // Spread along corridors
+        var picked = PickFarthestPointSpread(corridorCandidates, count, corridorMinSpacing);
+
+        foreach (var tile in picked)
+        {
+            // If already taken, skip
+            if (reserved.Contains(tile)) continue;
+
+            SpawnSingleIntoTile(tile, difficulty: 1f);
+            reserved.Add(tile);
+        }
+    }
+
+    private List<Vector2Int> GetCorridorCandidates()
+    {
+        // True corridor tiles (path), not reserved
+        return dungeonData.path
+            .Where(t => !reserved.Contains(t))
+            .Distinct()
+            .ToList();
+    }
+
+    private void SpawnSingleIntoTile(Vector2Int tile, float difficulty)
+    {
+        EnemyTypeSO type = WeightedRandoms.Pick(enemyTypes, t => t != null ? t.spawnWeight : 0f);
+        if (type == null) return;
+
+        int vIndex = PickVariantIndex(type, difficulty);
+        SpawnEnemyGlobal(tile, type, (EnemyVariant)vIndex);
+    }
+
+    private void SpawnEnemyGlobal(Vector2Int tile, EnemyTypeSO type, EnemyVariant variant)
+    {
+        GameObject enemy = Instantiate(enemyPrefab);
+        enemy.transform.position = (Vector2)tile + Vector2.one * 0.5f;
+
+        var controller = enemy.GetComponent<EnemyController>();
+        if (controller == null)
+        {
+            Debug.LogError("Enemy prefab missing EnemyController", enemy);
+            Destroy(enemy);
+            return;
+        }
+
+        controller.Init(type, variant, dungeonData.PlayerReference.transform);
+    }
+
+    // ---------------------------
+    // TYPE PICKING (ANTI-STREAK)
+    // ---------------------------
+
     private EnemyTypeSO PickTypeWithAntiStreak(EnemyTypeSO lastType)
     {
         return WeightedRandoms.Pick(enemyTypes, t =>
         {
             if (t == null) return 0f;
             float w = Mathf.Max(0f, t.spawnWeight);
-            if (lastType != null && t == lastType) w *= 0.55f; // anti-streak
+            if (lastType != null && t == lastType) w *= 0.55f; // reduce streaks
             return w;
         });
     }
 
+    // ---------------------------
+    // SPAWN HELPERS (ROOM)
+    // ---------------------------
+
     private void SpawnSingle(Room room, Vector2Int tile, float difficulty, ref EnemyTypeSO lastType)
     {
+        if (reserved.Contains(tile)) return;
+
         EnemyTypeSO type = PickTypeWithAntiStreak(lastType);
         if (type == null) return;
 
@@ -308,30 +434,33 @@ public class AgentPlacer : MonoBehaviour
         EnemyVariant variant = (EnemyVariant)vIndex;
 
         if (verboseLogs) Debug.Log($"SpawnSingle -> {type.name} v{(int)variant} @ {tile}");
-        SpawnEnemy(room, tile, type, variant);
 
+        SpawnEnemy(room, tile, type, variant);
         lastType = type;
     }
 
     private int SpawnGroup(Room room, Vector2Int anchor, EnemyTypeSO type, int groupSize, List<Vector2Int> candidates, float difficulty)
     {
+        // Local positions near anchor
         var local = candidates
-            .Where(t => !room.PropPositions.Contains(t))
             .Where(t => Manhattan(t, anchor) <= Mathf.CeilToInt(groupRadius))
+            .Where(t => !reserved.Contains(t))
             .OrderBy(_ => Guid.NewGuid())
             .ToList();
 
-        if (local.Count == 0) local.Add(anchor);
+        if (local.Count == 0 && !reserved.Contains(anchor))
+            local.Add(anchor);
 
         int spawned = 0;
+
         for (int i = 0; i < groupSize && local.Count > 0; i++)
         {
             var tile = local[0];
             local.RemoveAt(0);
 
-            int vIndex = PickVariantIndex(type, difficulty * 0.9f);
-            if (verboseLogs) Debug.Log($"SpawnGroup -> {type.name} v{vIndex} @ {tile}");
+            if (reserved.Contains(tile)) continue;
 
+            int vIndex = PickVariantIndex(type, difficulty * 0.9f);
             SpawnEnemy(room, tile, type, (EnemyVariant)vIndex);
             spawned++;
         }
@@ -345,23 +474,28 @@ public class AgentPlacer : MonoBehaviour
         if (type == null) return 0;
 
         var local = candidates
-            .Where(t => !room.PropPositions.Contains(t))
             .Where(t => Manhattan(t, anchor) <= Mathf.CeilToInt(groupRadius + 1))
+            .Where(t => !reserved.Contains(t))
             .OrderBy(_ => Guid.NewGuid())
             .ToList();
 
-        if (local.Count == 0) local.Add(anchor);
+        if (local.Count == 0 && !reserved.Contains(anchor))
+            local.Add(anchor);
 
         int spawned = 0;
 
-        // Elite leader (prefer elite variant if it has weight)
+        // Elite leader
         if (local.Count > 0)
         {
             int eliteVariant = PickEliteVariantIndex(type);
-            if (verboseLogs) Debug.Log($"SpawnEliteLeader -> {type.name} v{eliteVariant} @ {local[0]}");
-            SpawnEnemy(room, local[0], type, (EnemyVariant)eliteVariant);
+            var leaderTile = local[0];
             local.RemoveAt(0);
-            spawned++;
+
+            if (!reserved.Contains(leaderTile))
+            {
+                SpawnEnemy(room, leaderTile, type, (EnemyVariant)eliteVariant);
+                spawned++;
+            }
         }
 
         // Minions
@@ -370,9 +504,9 @@ public class AgentPlacer : MonoBehaviour
             var tile = local[0];
             local.RemoveAt(0);
 
-            int vIndex = PickVariantIndex(type, difficulty * 0.8f);
-            if (verboseLogs) Debug.Log($"SpawnEliteMinion -> {type.name} v{vIndex} @ {tile}");
+            if (reserved.Contains(tile)) continue;
 
+            int vIndex = PickVariantIndex(type, difficulty * 0.8f);
             SpawnEnemy(room, tile, type, (EnemyVariant)vIndex);
             spawned++;
         }
@@ -385,9 +519,7 @@ public class AgentPlacer : MonoBehaviour
     {
         if (type == null) return;
         if (dungeonData.PlayerReference == null) return;
-
-        // If another enemy/prop already reserved this tile, skip
-        if (room.PropPositions.Contains(tile)) return;
+        if (reserved.Contains(tile)) return;
 
         GameObject enemy = Instantiate(enemyPrefab);
         enemy.transform.position = (Vector2)tile + Vector2.one * 0.5f;
@@ -400,42 +532,37 @@ public class AgentPlacer : MonoBehaviour
             return;
         }
 
-        // IMPORTANT: EnemyController.Init must return bool
-        bool ok = controller.Init(type, variant, dungeonData.PlayerReference.transform);
-        if (!ok)
-        {
-            // Prevent "ghost enemies"
-            Destroy(enemy);
-            return;
-        }
+        controller.Init(type, variant, dungeonData.PlayerReference.transform);
 
-        room.EnemiesInTheRoom.Add(enemy);
-        room.PropPositions.Add(tile); // reserve tile so nothing overlaps
+        // Reserve AFTER init to prevent overlaps even if later spawns happen same frame
+        reserved.Add(tile);
+
+        room?.EnemiesInTheRoom?.Add(enemy);
+        room?.PropPositions?.Add(tile); // optional: reserve in room too
     }
 
     // ---------------------------
     // VARIANT WEIGHTS + DIFFICULTY
     // ---------------------------
 
-    // Uses per-variant spawnWeight (type.variants[i].spawnWeight), then biases by difficulty.
     private int PickVariantIndex(EnemyTypeSO type, float difficulty)
     {
         if (type == null || type.variants == null || type.variants.Length < 3)
             return UnityEngine.Random.Range(0, 3);
 
+        // Base weights
         float w0 = Mathf.Max(0f, type.variants[0] != null ? type.variants[0].spawnWeight : 0f);
         float w1 = Mathf.Max(0f, type.variants[1] != null ? type.variants[1].spawnWeight : 0f);
         float w2 = Mathf.Max(0f, type.variants[2] != null ? type.variants[2].spawnWeight : 0f);
 
-        // If all are 0, fallback random
         if (w0 + w1 + w2 <= 0f)
             return UnityEngine.Random.Range(0, 3);
 
-        // Difficulty pushes stronger variants later
+        // Difficulty bias toward stronger variants later
         float t = Mathf.InverseLerp(1f, 3f, difficulty); // 0..1
-        w0 *= Mathf.Lerp(1f, 0.55f, t);
+        w0 *= Mathf.Lerp(1f, 0.60f, t);
         w1 *= Mathf.Lerp(1f, 1.25f, t);
-        w2 *= Mathf.Lerp(1f, 1.90f, t);
+        w2 *= Mathf.Lerp(1f, 1.85f, t);
 
         float total = w0 + w1 + w2;
         float r = UnityEngine.Random.value * total;
@@ -458,50 +585,64 @@ public class AgentPlacer : MonoBehaviour
         return 0;
     }
 
-    // Farthest-point-ish spread picker with minimum spacing
-    private List<Vector2Int> PickSpreadTiles(List<Vector2Int> candidates, int count, int spacing)
+    // ---------------------------
+    // SPREAD PICKING (NO CORNER CLUMPS)
+    // ---------------------------
+
+    private List<Vector2Int> PickFarthestPointSpread(List<Vector2Int> candidates, int count, int spacing)
     {
-        var chosen = new List<Vector2Int>();
-        if (candidates == null || candidates.Count == 0 || count <= 0) return chosen;
+        var result = new List<Vector2Int>();
+        if (candidates == null || candidates.Count == 0 || count <= 0) return result;
 
-        chosen.Add(candidates[UnityEngine.Random.Range(0, candidates.Count)]);
+        // Filter out reserved
+        var pool = candidates.Where(t => !reserved.Contains(t)).Distinct().ToList();
+        if (pool.Count == 0) return result;
 
-        while (chosen.Count < count)
+        // Start near centroid (middle-ish)
+        Vector2 centroid = Vector2.zero;
+        foreach (var p in pool) centroid += (Vector2)p;
+        centroid /= pool.Count;
+
+        Vector2Int start = pool.OrderBy(p => Vector2.Distance((Vector2)p, centroid)).First();
+        result.Add(start);
+
+        // Farthest-point sampling with spacing
+        int relax = spacing;
+        while (result.Count < count)
         {
             Vector2Int best = default;
-            int bestDist = -1;
+            int bestMinD = -1;
             bool found = false;
 
-            foreach (var c in candidates)
+            foreach (var c in pool)
             {
-                // skip already chosen
-                bool already = false;
-                for (int i = 0; i < chosen.Count; i++)
-                {
-                    if (chosen[i] == c) { already = true; break; }
-                }
-                if (already) continue;
+                if (result.Contains(c)) continue;
 
-                // ensure spacing from all chosen
                 int minD = int.MaxValue;
-                for (int i = 0; i < chosen.Count; i++)
-                    minD = Mathf.Min(minD, Manhattan(c, chosen[i]));
+                for (int i = 0; i < result.Count; i++)
+                    minD = Mathf.Min(minD, Manhattan(c, result[i]));
 
-                if (minD < spacing) continue;
+                if (minD < relax) continue;
 
-                if (minD > bestDist)
+                if (minD > bestMinD)
                 {
-                    bestDist = minD;
+                    bestMinD = minD;
                     best = c;
                     found = true;
                 }
             }
 
-            if (!found) break;
-            chosen.Add(best);
+            if (!found)
+            {
+                relax--;
+                if (relax < 0) break;
+                continue;
+            }
+
+            result.Add(best);
         }
 
-        return chosen;
+        return result;
     }
 
     private int Manhattan(Vector2Int a, Vector2Int b)
@@ -526,7 +667,7 @@ public class AgentPlacer : MonoBehaviour
 }
 
 // -------------------------------------------------------
-// WeightedRandom helper (fixes your "where is it from?")
+// Weighted random helper
 // -------------------------------------------------------
 public static class WeightedRandoms
 {

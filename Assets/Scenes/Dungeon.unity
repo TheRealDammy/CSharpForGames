@@ -11885,16 +11885,18 @@ MonoBehaviour:
   - {fileID: 11400000, guid: fecad1d9eea88334c973df8ccfd3c0e2, type: 2}
   - {fileID: 11400000, guid: 2f6383b1d5c5d824fb3edaad43acba8b, type: 2}
   enemyPrefab: {fileID: 6692813761708513881, guid: 092b075d6e8cdde4fa2642f868c2086e, type: 3}
-  minSpacing: 3
-  centerBias: 0.55
-  corridorBias: 0.5
+  minSpacing: 2
+  edgeBias: 0.1
+  corridorSpawnShare: 0.45
+  corridorMinSpacing: 3
+  allowCorridorSpawns: 1
   enemiesPerRoomRange: {x: 4, y: 8}
   guaranteeAtLeastOneEnemyPerRoom: 1
   difficultyPerRoom: 0.1
-  distanceFromPlayerRoomBonus: 0.3
+  distanceFromPlayerRoomBonus: 0.2
   elitePackChanceBase: 0.08
   elitePackChanceMax: 0.25
-  elitePackSize: {x: 2, y: 4}
+  elitePackSize: {x: 3, y: 5}
   groupRadius: 2
   showGizmo: 1
   verboseLogs: 1

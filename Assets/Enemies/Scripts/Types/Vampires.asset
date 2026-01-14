@@ -15,36 +15,36 @@ MonoBehaviour:
   enemyName: Vampires
   defaultSprite: {fileID: -2314506720581648914, guid: 58fa46abd7e85f64087add3141b02122, type: 3}
   defaultAnimator: {fileID: 22100000, guid: 6e8bd614b5b7aa746ac65f26c5924558, type: 2}
-  baseHP: 50
-  baseDamage: 30
-  moveSpeed: 5
-  aggroRange: 6
-  attackRange: 1
-  attackCooldown: 0.8
-  spawnWeight: 2
-  prefersGroups: 0
-  groupMin: 2
-  groupMax: 5
-  groupChance: 0.6
+  baseHP: 85
+  baseDamage: 18
+  moveSpeed: 2.6
+  aggroRange: 7
+  attackRange: 1.15
+  attackCooldown: 0.85
+  spawnWeight: 1.5
+  prefersGroups: 1
+  groupMin: 1
+  groupMax: 2
+  groupChance: 0.33
   variants:
-  - hpMultiplier: 0
-    damageMultiplier: 0
-    speedMultiplier: 0
-    spawnWeight: 80
-    scaleMultiplier: 0
-    spriteOverride: {fileID: -2314506720581648914, guid: 58fa46abd7e85f64087add3141b02122, type: 3}
-    animatorOverride: {fileID: 22100000, guid: 6e8bd614b5b7aa746ac65f26c5924558, type: 2}
-  - hpMultiplier: 0.5
-    damageMultiplier: 0.5
-    speedMultiplier: 0.5
-    spawnWeight: 18
-    scaleMultiplier: 0
-    spriteOverride: {fileID: -5284183712937704879, guid: 340e7689484244344a5c1ba903da4cfd, type: 3}
-    animatorOverride: {fileID: 22100000, guid: 8b4d4f26e8ea4fd4ea1e392acefa144f, type: 2}
   - hpMultiplier: 1
     damageMultiplier: 1
     speedMultiplier: 1
-    spawnWeight: 2
+    spawnWeight: 70
+    scaleMultiplier: 0
+    spriteOverride: {fileID: -2314506720581648914, guid: 58fa46abd7e85f64087add3141b02122, type: 3}
+    animatorOverride: {fileID: 22100000, guid: 6e8bd614b5b7aa746ac65f26c5924558, type: 2}
+  - hpMultiplier: 1.35
+    damageMultiplier: 1.2
+    speedMultiplier: 1.05
+    spawnWeight: 25
+    scaleMultiplier: 0
+    spriteOverride: {fileID: -5284183712937704879, guid: 340e7689484244344a5c1ba903da4cfd, type: 3}
+    animatorOverride: {fileID: 22100000, guid: 8b4d4f26e8ea4fd4ea1e392acefa144f, type: 2}
+  - hpMultiplier: 1.9
+    damageMultiplier: 1.55
+    speedMultiplier: 1.12
+    spawnWeight: 5
     scaleMultiplier: 0
     spriteOverride: {fileID: -4622778640565343425, guid: 8b6f114b4d92cd94b94e736973356ba9, type: 3}
     animatorOverride: {fileID: 22100000, guid: 9e771c9f696251848b66f294c6401a88, type: 2}
