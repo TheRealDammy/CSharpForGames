@@ -1,10 +1,11 @@
 using System.Collections;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class EnemyHealth : MonoBehaviour, IDamageable
 {
-    public int MaxHP { get; private set; }
-    public int CurrentHP { get; private set; }
+    public int maxHP { get; private set; }
+    public int currentHP { get; private set; }
 
     [Header("Death")]
     [SerializeField] private float destroyDelay = 0.35f; // set to your death anim length
@@ -16,7 +17,8 @@ public class EnemyHealth : MonoBehaviour, IDamageable
     private Rigidbody2D rb;
     private Collider2D[] colliders;
 
-    private bool isDead;
+    [SerializeField] private Image healthBar;
+    [SerializeField] private Canvas healthBarCanvas;
 
     private void Awake()
     {
@@ -28,22 +30,30 @@ public class EnemyHealth : MonoBehaviour, IDamageable
         animator = GetComponentInChildren<Animator>(true);
         rb = GetComponent<Rigidbody2D>();
         colliders = GetComponentsInChildren<Collider2D>(true);
+        healthBarCanvas.enabled = false;
     }
 
     public void Init(int maxHp)
     {
-        MaxHP = Mathf.Max(1, maxHp);
-        CurrentHP = MaxHP;
+        maxHP = Mathf.Max(1, maxHp);
+        currentHP = maxHP;
+    }
+
+    public void Update()
+    {
+        healthBar.fillAmount = (float)currentHP / (float)maxHP;
     }
 
     public void TakeDamage(int amount, Vector2 hitPoint, Vector2 hitDirection)
     {
-        if (animator != null)
-            animator.SetTrigger("Hurt");
+        animator.SetTrigger("Hurt");
 
-        CurrentHP -= Mathf.Max(1, amount);
+        if (healthBarCanvas != null)
+            healthBarCanvas.enabled = true;
 
-        if (CurrentHP <= 0)
+        currentHP -= Mathf.Max(1, amount);
+
+        if (currentHP <= 0)
         {
             Die();
         }
@@ -51,26 +61,17 @@ public class EnemyHealth : MonoBehaviour, IDamageable
 
     private void Die()
     {
-        if (animator != null)
-        {
-            animator.SetBool("isDead", true);
-        }
-
         // stop movement immediately
-        if (rb != null)
-        {
-            rb.linearVelocity = Vector2.zero;
-            rb.simulated = false;
-        }
+        rb.linearVelocity = Vector2.zero;
+        rb.simulated = false;
 
         // disable colliders so it doesn't block / get hit multiple times
-        if (colliders != null)
-        {
-            foreach (var c in colliders)
-                if (c != null) c.enabled = false;
-        }
+         foreach (var c in colliders)
+           if (c != null) c.enabled = false;
+
+        animator.SetBool("isDead", true);
 
         // destroy after delay so death anim can show
-        Destroy(gameObject, Mathf.Max(0f, destroyDelay));
+        Destroy(gameObject,  destroyDelay);
     }
 }

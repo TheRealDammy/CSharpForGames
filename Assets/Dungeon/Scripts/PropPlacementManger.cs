@@ -423,6 +423,12 @@ public class PropPlacementManager : MonoBehaviour
             destruct.Init(propToPlace, room, dungeonData, placementPostion);
         }
 
+        if (propToPlace.Interactable)
+        {
+            var interactable = prop.AddComponent<InteractableProps>();
+            interactable.Interact();
+        }
+
         return prop;
     }
 }

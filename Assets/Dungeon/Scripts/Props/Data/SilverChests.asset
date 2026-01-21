@@ -30,3 +30,7 @@ MonoBehaviour:
   spawnChance: 0.5
   hasColliders: 1
   OnlyCorner: 1
+  Interactable: 1
+  pickupPrefab: []
+  pickupSpawnChance: 0.2
+  numPickupsToSpawn: 1

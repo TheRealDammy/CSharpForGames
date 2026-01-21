@@ -39,4 +39,12 @@ public class Prop : ScriptableObject
     [Range(0, 1f)] public float spawnChance = 1f;
     public bool hasColliders = true;
     public bool OnlyCorner;
+
+    [Space, Header("Interactability:")]
+    public bool Interactable;
+
+    [Space, Header("Pickup Settings:")]
+    public GameObject[] pickupPrefab; // Optional: prefab to spawn on break
+    public float pickupSpawnChance = 0.2f; // 20% chance to spawn pickup
+    public int numPickupsToSpawn = 1; // Number of pickups to spawn
 }

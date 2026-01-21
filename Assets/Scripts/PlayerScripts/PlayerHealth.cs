@@ -28,7 +28,7 @@ public class PlayerHealth : MonoBehaviour, IDamageable
     private void Awake()
     {
         currentHealth = maxHealth;
-        sr = GetComponentInChildren<SpriteRenderer>();
+        sr = GetComponent<SpriteRenderer>();
         if (sr) original = sr.color;
     }
 
@@ -59,5 +59,14 @@ public class PlayerHealth : MonoBehaviour, IDamageable
         sr.color = Color.white;
         yield return new WaitForSeconds(flashTime);
         sr.color = original;
+    }
+
+    public void Heal(int amount)
+    {
+        currentHealth += amount;
+        if (currentHealth > maxHealth)
+        {
+            currentHealth = maxHealth;
+        }
     }
 }

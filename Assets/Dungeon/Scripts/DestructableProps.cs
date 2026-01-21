@@ -9,6 +9,9 @@ public class DestructibleProp : MonoBehaviour, IDamageable
     private DungeonData dungeonData;
     private Vector2Int anchorTile;
 
+    [SerializeField] private int TestLookingForImplementation;
+
+
     public void Init(Prop data, Room room, DungeonData dungeon, Vector2Int placedTile)
     {
         propData = data;
@@ -29,9 +32,18 @@ public class DestructibleProp : MonoBehaviour, IDamageable
 
     private void Break()
     {
-        Vector3 explosionPosition = transform.position;
+        for (int i = 0; i < propData.numPickupsToSpawn; i++)
+        {
+            Debug.Log("Attempting to spawn pickup from destructible prop.");
+            if (propData.pickupPrefab != null && Random.value <= propData.pickupSpawnChance)
+            {
+                int randomPickup = Random.Range(0, propData.pickupPrefab.Length - 1);
 
-        VFXManager.CreateExplosion(explosionPosition);
+                Vector3 spawnPos = (Vector2)transform.position + new Vector2(Random.Range(-0.3f, 0.3f), Random.Range(-0.3f, 0.3f));
+                Instantiate(propData.pickupPrefab[randomPickup], spawnPos, Quaternion.identity);
+                Debug.Log("Spawned pickup from destructible prop.");
+            }
+        }
 
         if (owningRoom != null)
         {
@@ -39,6 +51,6 @@ public class DestructibleProp : MonoBehaviour, IDamageable
             owningRoom.PropPositions.Remove(anchorTile); // assumes 1x1 destructibles
         }
 
-        Destroy(gameObject);  
+        Destroy(gameObject); 
     }
 }

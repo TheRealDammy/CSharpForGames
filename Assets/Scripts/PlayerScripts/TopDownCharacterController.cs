@@ -184,6 +184,14 @@ public class TopDownCharacterController : MonoBehaviour
         }
     }
 
+    public void HandleInteract(InputAction.CallbackContext ctx)
+    {
+        if (ctx.performed)
+        {
+            Interact();
+        }
+    }
+
     private void Fire()
     {
         Vector2 mousePosition = Mouse.current.position.ReadValue();
@@ -201,6 +209,12 @@ public class TopDownCharacterController : MonoBehaviour
         {
             projectileRB.AddForce(fireDirection.normalized * projectileSpeed, ForceMode2D.Impulse);
         }
+    }
+
+    public void Interact()
+    {
+        // Interaction logic can be implemented here
+        Debug.Log("Interact method called.");
     }
 
     public void TryAttack()
