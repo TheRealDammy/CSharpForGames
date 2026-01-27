@@ -27,11 +27,13 @@ MonoBehaviour:
   GroupMaxCount: 4
   Destructible: 1
   MaxHP: 20
+  BreakVFXPrefab: {fileID: 7559996586139823556, guid: 9734db339050b6444aab452d5ab87c1a, type: 3}
   spawnChance: 0.7
   hasColliders: 1
   OnlyCorner: 0
+  Interactable: 0
   pickupPrefab:
   - {fileID: 3343195462207668803, guid: 56aeb0f6086a6004c9dff9a07fa3c933, type: 3}
   - {fileID: 3343195462207668803, guid: 8b15beb77e9b4ae4fa62ec66ec7c6645, type: 3}
-  pickupSpawnChance: 0.2
+  pickupSpawnChance: 0.4
   numPickupsToSpawn: 1

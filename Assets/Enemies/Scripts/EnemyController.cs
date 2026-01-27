@@ -16,6 +16,16 @@ public class EnemyController : MonoBehaviour
 
     private EnemyTypeSO type;
     private EnemyVariant variant;
+    public EnemyVariantData variantData
+    {
+        get
+        {
+            if (type == null) return null;
+            int vi = (int)variant;
+            if (vi < 0 || vi >= type.variants.Length) return null;
+            return type.variants[vi];
+        }
+    }
 
     private float lastAttackTime = -999f;
 
@@ -203,15 +213,4 @@ public class EnemyController : MonoBehaviour
             dmg.TakeDamage(damage, hit.ClosestPoint(center), facingDir);
         }
     }
-
-#if UNITY_EDITOR
-    private void OnDrawGizmosSelected()
-    {
-        Gizmos.color = Color.yellow;
-        Gizmos.DrawWireSphere(transform.position, aggroRange > 0 ? aggroRange : 6f);
-
-        Gizmos.color = Color.red;
-        Gizmos.DrawWireSphere(transform.position, attackRange > 0 ? attackRange : 0.8f);
-    }
-#endif
 }

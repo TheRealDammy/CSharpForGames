@@ -1,14 +1,25 @@
+using TMPro;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class ExperienceSystem : MonoBehaviour
 {
-    [SerializeField] private int experiencePoints = 0;
-    [SerializeField] private int level = 1;
+    private int experiencePoints = 0;
+    private int level = 0;
     [SerializeField] private int experienceToNextLevel = 100;
     [SerializeField] private int experienceGrowthRate = 50;
     [SerializeField] private int maxLevel = 40;
     [SerializeField] private int statPointsPerLevel = 5;
-    [SerializeField] private int currentStatPoints = 0;
+    private int currentStatPoints = 0;
+
+    [SerializeField] private Image expBar;
+    [SerializeField] private TextMeshProUGUI levelText;
+
+    public void Awake()
+    {
+        expBar.fillAmount = experiencePoints / (float)experienceToNextLevel;
+        levelText.text = $"Level {level}";
+    }
 
     public void AddExperience(int amount)
     {
@@ -20,6 +31,10 @@ public class ExperienceSystem : MonoBehaviour
             experiencePoints -= experienceToNextLevel;
             LevelUp();
         }
+
+        expBar.fillAmount = experiencePoints / (float)experienceToNextLevel;
+
+        Debug.Log($"Gained {amount} XP. Current XP: {experiencePoints}/{experienceToNextLevel}");
     }
 
     public void LevelUp()
@@ -27,6 +42,7 @@ public class ExperienceSystem : MonoBehaviour
         level++;
         currentStatPoints += statPointsPerLevel;
         experienceToNextLevel += experienceGrowthRate;
+        levelText.text = $"Level {level}";
         Debug.Log($"Leveled up to {level}! Stat points available: {currentStatPoints}");
     }
 
@@ -43,36 +59,8 @@ public class ExperienceSystem : MonoBehaviour
     public void ResetExperience()
     {
         experiencePoints = 0;
-        level = 1;
+        level = 0;
         experienceToNextLevel = 100;
         currentStatPoints = 0;
-    }
-
-    public int GetCurrentLevel()
-    {
-        return level;
-    }
-    public int GetCurrentExperience()
-    {
-        return experiencePoints;
-    }
-    public int GetExperienceToNextLevel()
-    {
-        return experienceToNextLevel;
-    }
-    public int GetCurrentStatPoints()
-    {
-        return currentStatPoints;
-    }
-    public int GetExperienceGrowthRate() {
-        return experienceGrowthRate;
-    }
-    public int GetMaxLevel()
-    {
-        return maxLevel;
-    }
-    public int GetStatPointsPerLevel()
-    {
-        return statPointsPerLevel;
     }
 }

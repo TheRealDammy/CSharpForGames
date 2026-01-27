@@ -34,6 +34,7 @@ public class Prop : ScriptableObject
     [Space, Header("Destructability:")]
     public bool Destructible;
     public int MaxHP = 1;
+    public GameObject BreakVFXPrefab;
 
     [Space, Header("Spawn settings:")]
     [Range(0, 1f)] public float spawnChance = 1f;

@@ -14,6 +14,7 @@ public class PlayerHealth : MonoBehaviour, IDamageable
     private Color original;
 
     [SerializeField] private Image healthBar;
+    private ExperienceSystem expSystem;
 
     void Start()
     {
@@ -29,6 +30,7 @@ public class PlayerHealth : MonoBehaviour, IDamageable
     {
         currentHealth = maxHealth;
         sr = GetComponent<SpriteRenderer>();
+        expSystem = GetComponent<ExperienceSystem>();
         if (sr) original = sr.color;
     }
 
@@ -42,8 +44,7 @@ public class PlayerHealth : MonoBehaviour, IDamageable
 
         if (currentHealth <= 0)
         {
-            // TODO: death logic
-            Destroy(gameObject);
+            Die();
         }
     }
 
@@ -56,7 +57,7 @@ public class PlayerHealth : MonoBehaviour, IDamageable
 
     private IEnumerator Flash()
     {
-        sr.color = Color.white;
+        sr.color = Color.red;
         yield return new WaitForSeconds(flashTime);
         sr.color = original;
     }
@@ -68,5 +69,14 @@ public class PlayerHealth : MonoBehaviour, IDamageable
         {
             currentHealth = maxHealth;
         }
+    }
+
+    public void Die()
+    {
+        expSystem.ResetExperience();
+
+        UnityEngine.SceneManagement.SceneManager.LoadSceneAsync("DeathScene");
+
+        DestroyImmediate(gameObject);
     }
 }

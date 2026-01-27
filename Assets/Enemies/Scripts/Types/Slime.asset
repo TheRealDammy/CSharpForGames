@@ -30,6 +30,8 @@ MonoBehaviour:
   - hpMultiplier: 1
     damageMultiplier: 1
     speedMultiplier: 1
+    aggroRangeMultiplier: 1
+    spawnExperience: 10
     spawnWeight: 70
     scaleMultiplier: 0
     spriteOverride: {fileID: 0}
@@ -37,6 +39,8 @@ MonoBehaviour:
   - hpMultiplier: 1.35
     damageMultiplier: 1.2
     speedMultiplier: 1.05
+    aggroRangeMultiplier: 1
+    spawnExperience: 15
     spawnWeight: 25
     scaleMultiplier: 0
     spriteOverride: {fileID: -2863241958341551144, guid: 94629c8000b50b0409aee933bf963ab8, type: 3}
@@ -44,6 +48,8 @@ MonoBehaviour:
   - hpMultiplier: 1.9
     damageMultiplier: 1.55
     speedMultiplier: 1.12
+    aggroRangeMultiplier: 1
+    spawnExperience: 20
     spawnWeight: 5
     scaleMultiplier: 0
     spriteOverride: {fileID: 3726720421939613768, guid: 7ff225a52c9c9184ca223729ed085d4c, type: 3}

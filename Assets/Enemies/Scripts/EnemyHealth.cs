@@ -7,9 +7,6 @@ public class EnemyHealth : MonoBehaviour, IDamageable
     public int maxHP { get; private set; }
     public int currentHP { get; private set; }
 
-    [Header("Death")]
-    [SerializeField] private float destroyDelay = 0.35f; // set to your death anim length
-
     private SpriteRenderer[] renderers;
     private Color[] originalColors;
 
@@ -19,6 +16,11 @@ public class EnemyHealth : MonoBehaviour, IDamageable
 
     [SerializeField] private Image healthBar;
     [SerializeField] private Canvas healthBarCanvas;
+
+    private EnemyVariantData enemyData;
+
+    private ExperienceSystem expSystem;
+    GameObject player;
 
     private void Awake()
     {
@@ -30,6 +32,8 @@ public class EnemyHealth : MonoBehaviour, IDamageable
         animator = GetComponentInChildren<Animator>(true);
         rb = GetComponent<Rigidbody2D>();
         colliders = GetComponentsInChildren<Collider2D>(true);
+        player = GameObject.FindGameObjectWithTag("Player");
+        expSystem = player.GetComponent<ExperienceSystem>();
         healthBarCanvas.enabled = false;
     }
 
@@ -71,7 +75,20 @@ public class EnemyHealth : MonoBehaviour, IDamageable
 
         animator.SetBool("isDead", true);
 
-        // destroy after delay so death anim can show
-        Destroy(gameObject,  destroyDelay);
+        // grant experience to player
+        if (enemyData == null)
+        {
+            EnemyController enemyController = GetComponent<EnemyController>();
+            if (enemyController != null)
+            {
+                enemyData = enemyController.variantData;
+            }
+        }   
+        if (expSystem != null)
+        {
+            expSystem.AddExperience(Mathf.RoundToInt(enemyData.spawnExperience));
+        }
+
+        DestroyImmediate(gameObject);
     }
 }

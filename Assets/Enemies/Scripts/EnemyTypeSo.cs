@@ -32,7 +32,6 @@ public class EnemyTypeSO : ScriptableObject
 
     [Header("Variants")]
     public EnemyVariantData[] variants = new EnemyVariantData[0];
-
 }
 
 [System.Serializable]
@@ -41,6 +40,8 @@ public class EnemyVariantData
     [Range(0.1f, 5f)] public float hpMultiplier = 1f;
     [Range(0.1f, 5f)] public float damageMultiplier = 1f;
     [Range(0.1f, 5f)] public float speedMultiplier = 1f;
+    [Range(0f, 1f)] public float aggroRangeMultiplier = 1f;
+    public float spawnExperience = 10f;
     [Min(0f)] public float spawnWeight = 1f;
 
     public float scaleMultiplier = 1f;

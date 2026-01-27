@@ -9,8 +9,6 @@ public class DestructibleProp : MonoBehaviour, IDamageable
     private DungeonData dungeonData;
     private Vector2Int anchorTile;
 
-    [SerializeField] private int TestLookingForImplementation;
-
 
     public void Init(Prop data, Room room, DungeonData dungeon, Vector2Int placedTile)
     {
@@ -37,7 +35,7 @@ public class DestructibleProp : MonoBehaviour, IDamageable
             Debug.Log("Attempting to spawn pickup from destructible prop.");
             if (propData.pickupPrefab != null && Random.value <= propData.pickupSpawnChance)
             {
-                int randomPickup = Random.Range(0, propData.pickupPrefab.Length - 1);
+                int randomPickup = Random.Range(0, propData.pickupPrefab.Length);
 
                 Vector3 spawnPos = (Vector2)transform.position + new Vector2(Random.Range(-0.3f, 0.3f), Random.Range(-0.3f, 0.3f));
                 Instantiate(propData.pickupPrefab[randomPickup], spawnPos, Quaternion.identity);
@@ -45,10 +43,20 @@ public class DestructibleProp : MonoBehaviour, IDamageable
             }
         }
 
+        if (propData.BreakVFXPrefab == null)
+        {
+            Debug.LogWarning("BreakVFXPrefab is not assigned in propData.");
+            Destroy(gameObject);
+        }
+
+        Vector3 pos = anchorTile + new Vector2(0.1f, 0.1f);
+
+        GameObject breakVFX = Instantiate(propData.BreakVFXPrefab, pos, Quaternion.identity);
+
         if (owningRoom != null)
         {
             owningRoom.PropObjectReferences.Remove(gameObject);
-            owningRoom.PropPositions.Remove(anchorTile); // assumes 1x1 destructibles
+            owningRoom.PropPositions.Remove(anchorTile);
         }
 
         Destroy(gameObject); 
