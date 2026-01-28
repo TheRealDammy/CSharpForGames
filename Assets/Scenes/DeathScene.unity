@@ -1019,7 +1019,7 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls:
       - m_Target: {fileID: 2095319500}
-        m_TargetAssemblyTypeName: DeathScreen, Assembly-CSharp
+        m_TargetAssemblyTypeName: DeathManager, Assembly-CSharp
         m_MethodName: QuitGame
         m_Mode: 1
         m_Arguments:

@@ -1,9 +1,6 @@
-using System;
 using System.Collections;
-using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.InputSystem;
-using UnityEngine.Rendering;
 
 /// <summary>
 /// A class to control the top-down character.
@@ -56,8 +53,13 @@ public class TopDownCharacterController : MonoBehaviour
 
     private float lastAttackTime = -999f;
     private bool isAttacking;
+    private PlayerInput playerInput;
 
     private Stamina staminaComponent;
+
+    [Header("UI Components")]
+    [SerializeField] GameObject inventory;
+    private bool isInventoryOpen = false;
 
     /// <summary>
     /// When the script first initialises this gets called.
@@ -70,6 +72,7 @@ public class TopDownCharacterController : MonoBehaviour
         animator = GetComponent<Animator>();
         m_rigidbody = GetComponent<Rigidbody2D>();
         staminaComponent = GetComponent<Stamina>();
+        playerInput = GetComponent<PlayerInput>();
     }
 
     /// <summary>
@@ -192,6 +195,14 @@ public class TopDownCharacterController : MonoBehaviour
         }
     }
 
+    public void HandleOpenInventory(InputAction.CallbackContext ctx)
+    {
+        if (ctx.performed)
+        {
+            OpenInventory();
+        }
+    }
+
     private void Fire()
     {
         Vector2 mousePosition = Mouse.current.position.ReadValue();
@@ -208,6 +219,20 @@ public class TopDownCharacterController : MonoBehaviour
         if (projectileRB != null)
         {
             projectileRB.AddForce(fireDirection.normalized * projectileSpeed, ForceMode2D.Impulse);
+        }
+    }
+
+    public void OpenInventory()
+    {
+        if (isInventoryOpen)
+        {
+            inventory.SetActive(false);
+            isInventoryOpen = false;
+        }
+        else
+        {
+            inventory.SetActive(true);
+            isInventoryOpen = true;
         }
     }
 

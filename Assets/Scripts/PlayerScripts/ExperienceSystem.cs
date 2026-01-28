@@ -63,4 +63,9 @@ public class ExperienceSystem : MonoBehaviour
         experienceToNextLevel = 100;
         currentStatPoints = 0;
     }
+
+    public int GetCurrentStatPoints()
+    {
+        return currentStatPoints;
+    }
 }
