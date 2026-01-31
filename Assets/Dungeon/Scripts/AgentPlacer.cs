@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
+using UnityEngine.UIElements;
 
 public class AgentPlacer : MonoBehaviour
 {
@@ -195,6 +196,13 @@ public class AgentPlacer : MonoBehaviour
 
         // Reserve player tile
         reserved.Add(spawnTile);
+
+        var stats = player.GetComponent<PlayerStats>();
+        var health = player.GetComponent<PlayerHealth>();
+
+        stats.InitializeDefaults();          // load/save stats
+        health.ApplyStats(true);
+
     }
 
     private void EnsureRoomAccessibleTiles(Room room)

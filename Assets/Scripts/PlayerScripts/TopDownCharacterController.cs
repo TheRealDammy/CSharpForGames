@@ -63,6 +63,18 @@ public class TopDownCharacterController : MonoBehaviour
         currentStamina = maxStamina;
         UpdateStaminaUI();
     }
+    private void OnEnable()
+    {
+        if (stats != null)
+            stats.OnStatChanged += OnStatChanged;
+    }
+
+    private void OnDisable()
+    {
+        if (stats != null)
+            stats.OnStatChanged -= OnStatChanged;
+    }
+
 
     // =========================
     // STAT APPLICATION
@@ -80,6 +92,21 @@ public class TopDownCharacterController : MonoBehaviour
         currentStamina = Mathf.Clamp(currentStamina, 0, maxStamina);
         UpdateStaminaUI();
     }
+
+    private void OnStatChanged(PlayerStatType type)
+    {
+        if (type == PlayerStatType.Stamina)
+        {
+            maxStamina = 100f + stats.GetStatLevel(PlayerStatType.Stamina) * 15f;
+            currentStamina = Mathf.Min(currentStamina, maxStamina);
+        }
+
+        if (type == PlayerStatType.Strength)
+        {
+            damage = 1 + stats.GetStatLevel(PlayerStatType.Strength);
+        }
+    }
+
 
     // =========================
     // MOVEMENT

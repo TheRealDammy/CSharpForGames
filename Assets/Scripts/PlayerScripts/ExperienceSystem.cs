@@ -1,72 +1,78 @@
+using System;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
 public class ExperienceSystem : MonoBehaviour
 {
-    [SerializeField] private int level = 1;
-    [SerializeField] private int currentXP;
-    [SerializeField] private int xpToNext = 100;
-    [SerializeField] private int xpGrowth = 50;
+    public event Action OnStatsChanged;
+
+    [SerializeField] private int experiencePoints;
+    [SerializeField] private int level;
+    [SerializeField] private int experienceToNextLevel = 100;
+    [SerializeField] private int experienceGrowthRate = 50;
+    [SerializeField] private int maxLevel = 40;
     [SerializeField] private int statPointsPerLevel = 5;
 
     private int currentStatPoints;
 
     [Header("UI")]
-    [SerializeField] private Image xpBar;
+    [SerializeField] private Image expBar;
     [SerializeField] private TextMeshProUGUI levelText;
 
-    private void Start()
+    private void Awake()
     {
-        UpdateUI();
+        RefreshUI();
     }
 
     public void AddXP(int amount)
     {
-        currentXP += amount;
+        if (level >= maxLevel) return;
 
-        while (currentXP >= xpToNext)
+        experiencePoints += amount;
+
+        while (experiencePoints >= experienceToNextLevel && level < maxLevel)
         {
-            currentXP -= xpToNext;
+            experiencePoints -= experienceToNextLevel;
             LevelUp();
         }
 
-        UpdateUI();
+        RefreshUI();
     }
 
     private void LevelUp()
     {
         level++;
         currentStatPoints += statPointsPerLevel;
-        xpToNext += xpGrowth;
-        Debug.Log($"Leveled up to {level}! You have {currentStatPoints} stat points to spend.");
+        experienceToNextLevel += experienceGrowthRate;
+
+        OnStatsChanged?.Invoke();
     }
 
     public bool SpendStatPoint()
     {
         if (currentStatPoints <= 0) return false;
-        currentStatPoints--;
-        return true;
-    }
 
-    public int GetStatPoints()
-    {
-        return currentStatPoints;
+        currentStatPoints--;
+        OnStatsChanged?.Invoke();
+        return true;
     }
 
     public void RefundStatPoint()
     {
         currentStatPoints++;
+        OnStatsChanged?.Invoke();
     }
 
-    public void SetStatPoints(int amount)
-    {
-        currentStatPoints = amount;
-    }
+    public int GetStatPoints() => currentStatPoints;
+    public int GetLevel() => level;
 
-    private void UpdateUI()
+    private void RefreshUI()
     {
-        xpBar.fillAmount = (float)currentXP / xpToNext;
-        levelText.text = $"Level {level}";
+        if (expBar)
+            expBar.fillAmount = experiencePoints / (float)experienceToNextLevel;
+
+        if (levelText)
+            levelText.text = $"Level {level}";
     }
 }
