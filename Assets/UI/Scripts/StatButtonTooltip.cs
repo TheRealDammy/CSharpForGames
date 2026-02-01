@@ -8,6 +8,12 @@ public class StatButtonTooltip : MonoBehaviour,
     public StatTooltip tooltip;
     public PlayerStats stats;
 
+    private void Start()
+    {
+        stats = GameObject.FindGameObjectWithTag("Player")
+            ?.GetComponent<PlayerStats>();
+    }
+
     public void OnPointerEnter(PointerEventData eventData)
     {
         string preview = stats.GetUpgradePreview(statType);

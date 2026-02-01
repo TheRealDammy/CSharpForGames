@@ -31,19 +31,9 @@ public class StatsUIController : MonoBehaviour
     private Coroutine bindRoutine;
 
     [SerializeField] private ExperienceSystem experienceSystem;
-    [SerializeField] private float barAnimSpeed = 6f;
-
-
-    private void Start()
-    {
-        RefreshUI();
-    }
 
     private void OnEnable()
     {
-        RefreshUI();
-        PlayerStats.Instance.OnStatChanged += _ => RefreshUI();
-        PlayerStats.Instance.OnStatsLoaded += RefreshUI;
         bindRoutine = StartCoroutine(BindWhenPlayerExists());
     }
 
@@ -51,9 +41,8 @@ public class StatsUIController : MonoBehaviour
     {
         RefreshUI();
 
-        if (PlayerStats.Instance == null) return;
-        PlayerStats.Instance.OnStatChanged -= _ => RefreshUI();
-        PlayerStats.Instance.OnStatsLoaded -= RefreshUI;
+        if (playerStats == null) return;
+        playerStats.OnStatChanged -= _ => RefreshUI();
 
         if (bindRoutine != null)
             StopCoroutine(bindRoutine);
@@ -104,7 +93,7 @@ public class StatsUIController : MonoBehaviour
 
     private void Update()
     {
-        if (PlayerStats.Instance == null) return;
+        if (playerStats == null) return;
         // Late-bind player safely (handles dungeon spawn)
         if (playerHealth == null || controller == null)
             TryBindPlayer();
@@ -137,7 +126,7 @@ public class StatsUIController : MonoBehaviour
     public void Upgrade(PlayerStatType type)
     {
         if (!experienceSystem.SpendStatPoint()) return;
-        if (!PlayerStats.Instance.TryIncreaseStat(type)) return;
+        if (!playerStats.TryIncreaseStat(type)) return;
 
         ApplyStats();
         RefreshUI();
@@ -145,7 +134,7 @@ public class StatsUIController : MonoBehaviour
 
     public void Refund(PlayerStatType type)
     {
-        if (!PlayerStats.Instance.TryDecreaseStat(type)) return;
+        if (!playerStats.TryDecreaseStat(type)) return;
 
         experienceSystem.RefundStatPoint();
         ApplyStats();

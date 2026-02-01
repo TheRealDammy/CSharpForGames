@@ -179,11 +179,24 @@ public class AgentPlacer : MonoBehaviour
 
     private void SpawnPlayer()
     {
-        if (playerPrefab == null) return;
-        if (playerRoomIndex < 0 || playerRoomIndex >= dungeonData.rooms.Count) return;
+        if (playerPrefab == null)
+        {
+            Debug.LogError("AgentPlacer: playerPrefab missing", this);
+            return;
+        }
+
+        if (playerRoomIndex < 0 || playerRoomIndex >= dungeonData.rooms.Count)
+        {
+            Debug.LogError("AgentPlacer: invalid playerRoomIndex", this);
+            return;
+        }
 
         Room playerRoom = dungeonData.rooms[playerRoomIndex];
-        if (playerRoom == null || playerRoom.FloorTiles == null || playerRoom.FloorTiles.Count == 0) return;
+        if (playerRoom == null || playerRoom.FloorTiles == null || playerRoom.FloorTiles.Count == 0)
+        {
+            Debug.LogError("AgentPlacer: player room invalid", this);
+            return;
+        }
 
         Vector2Int spawnTile =
             (playerRoom.InnerTiles != null && playerRoom.InnerTiles.Count > 0)
@@ -192,16 +205,50 @@ public class AgentPlacer : MonoBehaviour
 
         GameObject player = Instantiate(playerPrefab);
         player.transform.position = (Vector2)spawnTile + Vector2.one * 0.5f;
+        
+        player.name = "Player";
+        player.tag = "Player";
+
         dungeonData.PlayerReference = player;
 
         // Reserve player tile
         reserved.Add(spawnTile);
 
-        var stats = player.GetComponent<PlayerStats>();
-        var health = player.GetComponent<PlayerHealth>();
+        var classManager = PlayerClassHandler.Instance;
 
-        stats.InitializeDefaults();          // load/save stats
-        health.ApplyStats(true);
+        if (classManager == null || classManager.SelectedClass == null)
+        {
+            Debug.LogError("PlayerClassManager or SelectedClass missing!");
+            return;
+        }
+
+        var classData = classManager.SelectedClass;
+
+        // Attach combat
+        CombatController combat =
+            Instantiate(classData.combatPrefab, player.transform);
+
+        combat.transform.localPosition = Vector3.zero;
+        combat.transform.localRotation = Quaternion.identity;
+
+        // Apply base stats
+        var stats = player.GetComponent<PlayerStats>();
+        stats.SetBaseStats(
+            classData.baseHealth,
+            classData.baseStamina,
+            classData.baseDamage,
+            0
+        );
+
+        // Inject stats
+        combat.SetBaseDamage(classData.baseDamage);
+
+        // ---------- APPLY HEALTH AFTER STATS ----------
+        var health = player.GetComponent<PlayerHealth>();
+        if (health != null)
+        {
+            health.ForceRefresh(); // safer than ApplyStats(true)
+        }
 
     }
 

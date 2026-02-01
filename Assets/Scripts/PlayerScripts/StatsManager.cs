@@ -13,7 +13,7 @@ public class StatManager : MonoBehaviour
     private PlayerStats stats;
     private ExperienceSystem exp;
 
-    private void Awake()
+    private void Start()
     {
         stats = FindFirstObjectByType<PlayerStats>();
         exp = FindFirstObjectByType<ExperienceSystem>();
