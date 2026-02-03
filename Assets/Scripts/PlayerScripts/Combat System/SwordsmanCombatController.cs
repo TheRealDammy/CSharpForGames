@@ -7,10 +7,12 @@ public class SwordsmanCombatController : CombatController
     [SerializeField] private float attackRadius = 0.6f;
     [SerializeField] private LayerMask hitMask;
     [SerializeField] private Transform attackOrigin;
+    
 
     private int comboStep = 0;
     private float comboResetTime = 0.6f;
     private float comboTimer;
+    private int damage = 30;
 
     protected override void Awake()
     {
@@ -31,6 +33,8 @@ public class SwordsmanCombatController : CombatController
             hitMask = LayerMask.GetMask("Enemies", "Props");
             Debug.LogWarning("HitMask auto-assigned");
         }
+
+        baseDamage = damage;
     }  
 
     protected override void ExecuteAttack()
@@ -43,16 +47,9 @@ public class SwordsmanCombatController : CombatController
 
         animator.SetTrigger("Attack");
 
-        Debug.Log($"Attack fired | origin={attackOrigin} stats={stats}");
-
-        Debug.Log($"[Combat Debug] {name} | Serialized Damage = {baseDamage}",
-            this
-        );
-
-
         DealDamage();
         HitStop();
-        //CameraShake.Instance.Shake(0.15f, 0.08f);
+        CameraShake.Instance.Shake(0.15f, 0.08f);
     }
 
     private void DealDamage()
@@ -63,16 +60,7 @@ public class SwordsmanCombatController : CombatController
         Vector2 center = origin + lastDirection * attackRange;
 
         Collider2D[] all = Physics2D.OverlapCircleAll(center, attackRadius);
-
-        foreach (var c in all)
-        {
-            Debug.Log($"Found collider: {c.name} | Layer: {LayerMask.LayerToName(c.gameObject.layer)}");
-        }
-
-
         Collider2D[] hits = Physics2D.OverlapCircleAll(center, attackRadius, hitMask);
-        Debug.Log($"Hits detected: {hits.Length}");
-        Debug.Log($"HitMask value: {hitMask.value}");
 
         int damage = GetFinalDamage();
 

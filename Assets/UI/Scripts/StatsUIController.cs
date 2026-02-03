@@ -29,6 +29,7 @@ public class StatsUIController : MonoBehaviour
     private PlayerHealth playerHealth;
     private TopDownCharacterController controller;
     private Coroutine bindRoutine;
+    private CombatController combatController;
 
     [SerializeField] private ExperienceSystem experienceSystem;
 
@@ -74,7 +75,6 @@ public class StatsUIController : MonoBehaviour
                     yield break; // IMPORTANT: stop coroutine
                 }
             }
-
             yield return null; // try again next frame
         }
     }
@@ -158,10 +158,13 @@ public class StatsUIController : MonoBehaviour
     private void ApplyStats()
     {
         if (playerHealth != null)
-            playerHealth.ApplyStats(fullHeal: false);
+            playerHealth.ApplyStats(fullHeal: true);
 
         if (controller != null)
             controller.ApplyStats();
+
+        if (combatController != null)
+            combatController.ApplyStats();
     }
 
     private void RefreshUI()

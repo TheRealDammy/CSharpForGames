@@ -236,12 +236,9 @@ public class AgentPlacer : MonoBehaviour
         stats.SetBaseStats(
             classData.baseHealth,
             classData.baseStamina,
-            classData.baseDamage,
-            0
+            classData.baseStrength,
+            classData.baseDurability
         );
-
-        // Inject stats
-        combat.SetBaseDamage(classData.baseDamage);
 
         // ---------- APPLY HEALTH AFTER STATS ----------
         var health = player.GetComponent<PlayerHealth>();

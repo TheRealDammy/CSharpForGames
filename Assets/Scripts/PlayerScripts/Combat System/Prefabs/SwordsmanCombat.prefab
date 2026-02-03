@@ -52,4 +52,4 @@ MonoBehaviour:
     serializedVersion: 2
     m_Bits: 768
   attackOrigin: {fileID: 0}
-  damage: 20
+  damage: 10

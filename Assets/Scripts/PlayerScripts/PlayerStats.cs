@@ -93,7 +93,6 @@ public class PlayerStats : MonoBehaviour
     public bool TryIncreaseStat(PlayerStatType type)
     {
         if (stats[type].level >= stats[type].hardCap) return false;
-        Math.Clamp(stats[type].level, 0, stats[type].hardCap);
         stats[type].level++;    
         OnStatChanged?.Invoke(type);
         return true;
@@ -102,8 +101,8 @@ public class PlayerStats : MonoBehaviour
     public bool TryDecreaseStat(PlayerStatType type)
     {
         if (stats[type].level >= stats[type].hardCap) return false;
-        Math.Clamp(stats[type].level, 0, stats[type].hardCap);
-        stats[type].level--;   
+        if (stats[type].level <= 0) return false;
+        stats[type].level--;
         OnStatChanged?.Invoke(type);
         return true;
     }
@@ -124,7 +123,7 @@ public class PlayerStats : MonoBehaviour
         {
             PlayerStatType.Health => "+20 HP",
             PlayerStatType.Stamina => "+15 Stamina",
-            PlayerStatType.Strength => "+5 Damage",
+            PlayerStatType.Strength => "+5% Damage",
             PlayerStatType.Durability => "+4% DR",
             _ => ""
         };

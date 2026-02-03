@@ -26,6 +26,7 @@ public class PlayerStatsDisplayUI : MonoBehaviour
         stats = player.GetComponent<PlayerStats>();
         health = player.GetComponent<PlayerHealth>();
         controller = player.GetComponent<TopDownCharacterController>();
+        combatController = player.GetComponent<CombatController>();
 
         stats.OnStatChanged += _ => Refresh();
         Refresh();
@@ -37,7 +38,7 @@ public class PlayerStatsDisplayUI : MonoBehaviour
 
         healthText.text = $"Health: {health.GetMaxHealth()}";
         staminaText.text = $"Stamina: {controller.GetMaxStamina()}";
-        damageText.text = $"Damage: {combatController.GetDamage()}";
+        damageText.text = $"Damage: {combatController.GetFinalDamage()}";
         durabilityText.text =
             $"Damage Reduction: {stats.GetDamageReductionPercent()}%";
         moveSpeedText.text = $"Move Speed: {controller.GetCurrentSpeed()}";

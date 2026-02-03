@@ -8,6 +8,7 @@ public class ArcherCombatController : CombatController
     [SerializeField] float range = 3.2f;
     [SerializeField] float radius = 0.2f;
     [SerializeField] LayerMask hitMask;
+    private int damage;
 
     protected override void Awake()
     {
@@ -25,6 +26,8 @@ public class ArcherCombatController : CombatController
             hitMask = LayerMask.GetMask("Enemies", "Props");
             Debug.LogWarning("HitMask auto-assigned");
         }
+
+        baseDamage = damage;
     }
 
     protected override void ExecuteAttack()

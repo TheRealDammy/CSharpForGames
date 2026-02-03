@@ -54,3 +54,4 @@ MonoBehaviour:
   hitMask:
     serializedVersion: 2
     m_Bits: 768
+  baseDamage: 30

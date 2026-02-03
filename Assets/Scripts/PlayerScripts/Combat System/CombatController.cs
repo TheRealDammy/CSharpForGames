@@ -11,11 +11,11 @@ public abstract class CombatController : MonoBehaviour
 
     protected bool isAttacking;
     protected float lastAttackTime;
+    protected int baseDamage;
 
     [Header("Core Combat")]
     [SerializeField] protected float attackCooldown = 0.3f;
-    [SerializeField] protected float hitStopTime = 0.06f;
-    protected int baseDamage;
+    [SerializeField] protected float hitStopTime = 0.06f;    
 
     protected virtual void Awake()
     {
@@ -39,18 +39,19 @@ public abstract class CombatController : MonoBehaviour
         ExecuteAttack();
     }
 
-    protected abstract void ExecuteAttack();
-
-    protected void HitStop()
+    public void ApplyStats()
     {
-        StartCoroutine(HitStopRoutine());
-    }
-    public void SetBaseDamage(int value)
-    {
-        baseDamage = value;
+        int strength = stats.GetFinalStat(PlayerStatType.Strength);
+
+        // scaling: +5% per strength point
+        float multiplier = (strength * 0.05f);
+
+        baseDamage = Mathf.Max(1, Mathf.RoundToInt(baseDamage + multiplier));
+
+        Debug.Log($"[CombatController] Applied Stats: Strength={strength}, BaseDamage={baseDamage}");
     }
 
-    protected int GetFinalDamage()
+    public int GetFinalDamage()
     {
         if (stats == null)
         {
@@ -58,17 +59,14 @@ public abstract class CombatController : MonoBehaviour
             return baseDamage;
         }
 
-        int strength = stats.GetFinalStat(PlayerStatType.Strength);
-
-        // scaling: +20% per strength point
-        float multiplier = 1f + (strength * 0.2f);
-
-        return Mathf.Max(1, Mathf.RoundToInt(baseDamage * multiplier));
+        return baseDamage;
     }
 
-    public int GetDamage()
+    protected abstract void ExecuteAttack();
+
+    protected void HitStop()
     {
-        return GetFinalDamage();
+        StartCoroutine(HitStopRoutine());
     }
 
     private System.Collections.IEnumerator HitStopRoutine()
