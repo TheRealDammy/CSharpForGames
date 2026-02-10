@@ -18,7 +18,7 @@ EditorBuildSettings:
     path: Assets/Scenes/Dungeon.unity
     guid: 0236e26a93e801e439c9dcd39f1a948b
   - enabled: 1
-    path: Assets/Scenes/DeathScene.unity
+    path: Assets/Scenes/GameOver.unity
     guid: a9cca72284a37e549be656c985b94cc5
   - enabled: 1
     path: Assets/Scenes/CharacterSelection.unity

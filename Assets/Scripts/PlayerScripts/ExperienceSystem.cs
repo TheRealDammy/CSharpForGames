@@ -75,4 +75,12 @@ public class ExperienceSystem : MonoBehaviour
         if (levelText)
             levelText.text = $"Level {level}";
     }
+
+    public void HandlePlayerDeath()
+    {
+        // For simplicity, we won't implement XP loss on death for now.
+        // For now, we simply reset XP to 0 but keep the level and stat points.
+        experiencePoints = 0;
+        RefreshUI();
+    }
 }

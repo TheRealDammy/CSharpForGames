@@ -1,15 +1,22 @@
+using UnityEditor;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 public class DeathManager : MonoBehaviour
 {
     public void Respawn()
     {
-        UnityEngine.SceneManagement.SceneManager.LoadSceneAsync("Dungeon");
+        SceneManager.LoadSceneAsync("Dungeon");
+        SceneManager.UnloadSceneAsync("GameOver");
     }
 
     public void QuitGame()
     {
-        Application.Quit();
-        Debug.Log("Quit Game");
+        Debug.Log("Quitting Game...");
+        #if UNITY_EDITOR
+            EditorApplication.ExitPlaymode();
+        #else
+            Application.Quit();
+        #endif
     }
 }

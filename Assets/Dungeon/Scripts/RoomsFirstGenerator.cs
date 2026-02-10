@@ -32,7 +32,6 @@ public class RoomsFirstGenerator : RandomDungeonGenerator
         // Safety
         if (dungeonData != null)
         {
-            Debug.Log($"GEN dungeonData: {dungeonData?.name}");
             dungeonData.Reset();
         }
 

@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.SceneManagement;
 
 public class PlayerHealth : MonoBehaviour, IDamageable
 {
@@ -10,12 +11,13 @@ public class PlayerHealth : MonoBehaviour, IDamageable
     private float maxHealth;
     private float currentHealth;
     private PlayerStats stats;
+    private ExperienceSystem experienceSystem;
 
     private void Awake()
     {
         stats = GetComponent<PlayerStats>();
         sfx = GetComponentInChildren<PlayerSFX>();
-
+        experienceSystem = GetComponent<ExperienceSystem>();
     }
 
     public void ApplyStats(bool fullHeal)
@@ -34,6 +36,11 @@ public class PlayerHealth : MonoBehaviour, IDamageable
         UpdateUI();
 
         sfx?.PlayHit();
+
+        if (currentHealth <= 0)
+        {
+            Die();
+        }        
     }
 
     public void Heal(int amount)
@@ -57,4 +64,10 @@ public class PlayerHealth : MonoBehaviour, IDamageable
         ApplyStats(true);
     }
 
+    public void Die()
+    {
+        experienceSystem?.HandlePlayerDeath();
+        SceneManager.LoadSceneAsync("GameOver");
+        SceneManager.UnloadSceneAsync("Dungeon");
+    }
 }
