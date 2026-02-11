@@ -59,4 +59,13 @@ public class Room
         this.RoomCenterPos = roomCenterPos;
         this.FloorTiles = floorTiles;
     }
+
+    public bool IsDiscovered { get; private set; }
+    public bool HasBeenDiscovered = false;
+    public List<GameObject> TrapsInRoom = new List<GameObject>();
+    public HashSet<Vector2Int> TrapPositions = new HashSet<Vector2Int>();
+    public void Discover()
+    {
+        IsDiscovered = true;
+    }
 }

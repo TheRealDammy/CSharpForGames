@@ -12,6 +12,14 @@ public class PropPlacementManager : MonoBehaviour
     [SerializeField] private List<Prop> propsToPlace;
     [SerializeField] private GameObject propPrefab;
 
+    [Header("Traps")]
+    [SerializeField] private GameObject spikeTrapPrefab;
+    [SerializeField, Range(0f, 0.3f)] private float trapChance = 0.1f;
+
+    [Header("Checkpoint")]
+    [SerializeField] private GameObject checkpointPrefab;
+    [SerializeField] private int numberOfCheckpoints = 2;
+
     public UnityEvent OnFinished;
 
     private void Awake()
@@ -30,8 +38,12 @@ public class PropPlacementManager : MonoBehaviour
         if (propsToPlace == null || propsToPlace.Count == 0) return;
         propsToPlace = propsToPlace.Where(p => p != null).ToList();
 
+
         foreach (Room room in dungeonData.rooms)
         {
+            room.PropPositions.Clear();
+            room.PropObjectReferences.Clear();
+
             //Place props place props in the corners
             List<Prop> cornerProps = propsToPlace
                 .Where(x => x.Corner)
@@ -72,12 +84,92 @@ public class PropPlacementManager : MonoBehaviour
                 .Where(p => p != null && p.Inner && !p.OnlyCorner)
                 .ToList();
             PlaceProps(room, innerProps, room.InnerTiles, PlacementOriginCorner.BottomLeft);
-        }
 
-        //OnFinished?.Invoke();
+            SpawnTraps(room);
+            SpawnCheckpoints();
+        }
         Invoke("RunEvent", 1);
 
     }
+
+    //Trap Spawning: simple random chance on non-reserved floor tiles (can be improved later with smarter logic)
+    private void SpawnTraps(Room room)
+    {
+        foreach (var tile in room.FloorTiles)
+        {
+            // Do not place on path
+            if (dungeonData.path.Contains(tile))
+                continue;
+
+            // Do not place on props
+            if (room.PropPositions.Contains(tile))
+                continue;
+
+            if (room.TrapPositions.Contains(tile))
+                continue;
+
+            if (UnityEngine.Random.value < trapChance)
+            {
+                GameObject trap = Instantiate(
+                    spikeTrapPrefab,
+                    (Vector2)tile + Vector2.one * 0.5f,
+                    Quaternion.identity
+                );
+
+                room.TrapsInRoom.Add(trap);
+
+                room.TrapPositions.Add(tile);
+            }
+        }
+    }
+
+    private void SpawnCheckpoints()
+    {
+        if (checkpointPrefab == null)
+        {
+            Debug.LogWarning("CheckpointPrefab missing");
+            return;
+        }
+
+        // Exclude player start room
+        var eligibleRooms = dungeonData.rooms
+            .Where((r, index) => index != 0)
+            .OrderBy(_ => UnityEngine.Random.value)
+            .Take(numberOfCheckpoints)
+            .ToList();
+
+        foreach (var room in eligibleRooms)
+        {
+            var candidates = room.FloorTiles
+                .Where(t => !room.PropPositions.Contains(t))
+                .Where(t => !room.TrapPositions.Contains(t))
+                .Where(t => !dungeonData.path.Contains(t))
+                .Where(t => !AgentTileReserved(t))
+                .ToList();
+
+            if (candidates.Count == 0)
+                continue;
+
+            Vector2Int tile = candidates[UnityEngine.Random.Range(0, candidates.Count)];
+
+            Vector3 worldPos = new Vector3(tile.x + 0.5f, tile.y + 0.5f, -1f);
+
+            GameObject checkpoint = Instantiate(checkpointPrefab, worldPos, Quaternion.identity);
+
+            room.PropPositions.Add(tile);
+
+            Debug.Log($"Checkpoint spawned in room at {worldPos}");
+        }
+    }
+
+    private bool AgentTileReserved(Vector2Int tile)
+    {
+        var placer = FindFirstObjectByType<AgentPlacer>();
+        if (placer == null) return false;
+
+        return false; // optional if you want to expose reserved later
+    }
+
 
     public void RunEvent()
     {
@@ -367,8 +459,13 @@ public class PropPlacementManager : MonoBehaviour
         int tempCount = count < availableSpaces.Count ? count : availableSpaces.Count;
         for (int i = 0; i < tempCount; i++)
         {
-            PlacePropGameObjectAt(room, availableSpaces[i], propToPlace);
+            Vector2Int pos = availableSpaces[i];
+
+            PlacePropGameObjectAt(room, pos, propToPlace);
+
+            room.PropPositions.Add(pos);
         }
+
 
     }
 

@@ -106,6 +106,8 @@ public class RoomsFirstGenerator : RandomDungeonGenerator
             roomDataExtractor.ProcessRooms();
             Debug.Log($"EXTRACTOR dungeonData: {dungeonData?.name}");
         }
+
+        //trigger.RoomReference = room;
     }
 
     private (HashSet<Vector2Int> allFloors, List<Room> rooms) CreateRoomsAndData(List<BoundsInt> roomsBounds)

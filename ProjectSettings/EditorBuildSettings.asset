@@ -12,8 +12,8 @@ EditorBuildSettings:
     path: Assets/Scenes/MainMenu.unity
     guid: 36e816be483b6d3429529cee1281806e
   - enabled: 1
-    path: Assets/Scenes/DevelopmentScene.unity
-    guid: dd612d0fc133f6b45ae4c1bedb705123
+    path: Assets/Scenes/CharacterSelection.unity
+    guid: c464cc911fde370418ffb601b33df58b
   - enabled: 1
     path: Assets/Scenes/Dungeon.unity
     guid: 0236e26a93e801e439c9dcd39f1a948b
@@ -21,8 +21,11 @@ EditorBuildSettings:
     path: Assets/Scenes/GameOver.unity
     guid: a9cca72284a37e549be656c985b94cc5
   - enabled: 1
-    path: Assets/Scenes/CharacterSelection.unity
-    guid: c464cc911fde370418ffb601b33df58b
+    path: Assets/Scenes/WinScreen.unity
+    guid: 37025e234a96b5d4c9f8b3c9861ff0e1
+  - enabled: 1
+    path: Assets/Scenes/DevelopmentScene.unity
+    guid: dd612d0fc133f6b45ae4c1bedb705123
   m_configObjects:
     com.unity.input.settings.actions: {fileID: -944628639613478452, guid: 2bcd2660ca9b64942af0de543d8d7100, type: 3}
   m_UseUCBPForAssetBundles: 0

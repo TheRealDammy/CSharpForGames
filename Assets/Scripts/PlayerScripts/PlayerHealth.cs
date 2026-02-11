@@ -1,17 +1,19 @@
 using UnityEngine;
 using UnityEngine.UI;
-using UnityEngine.SceneManagement;
 
 public class PlayerHealth : MonoBehaviour, IDamageable
 {
+    [Header("UI")]
     [SerializeField] private Image healthBar;
-    [SerializeField] private PlayerSFX sfx;
-
 
     private float maxHealth;
     private float currentHealth;
+
     private PlayerStats stats;
+    private PlayerSFX sfx;
     private ExperienceSystem experienceSystem;
+
+    private bool isDead;
 
     private void Awake()
     {
@@ -23,14 +25,20 @@ public class PlayerHealth : MonoBehaviour, IDamageable
     public void ApplyStats(bool fullHeal)
     {
         maxHealth = stats.GetFinalStat(PlayerStatType.Health);
-        if (fullHeal) currentHealth = maxHealth;
+
+        if (fullHeal || currentHealth <= 0)
+            currentHealth = maxHealth;
+
         UpdateUI();
     }
 
     public void TakeDamage(int amount, Vector2 hitPoint, Vector2 dir)
     {
-        int reduced = Mathf.RoundToInt(amount *
-            (1f - stats.GetDamageReductionPercent() / 100f));
+        if (isDead) return;
+
+        int reduced = Mathf.RoundToInt(
+            amount * (1f - stats.GetDamageReductionPercent() / 100f)
+        );
 
         currentHealth -= Mathf.Max(1, reduced);
         UpdateUI();
@@ -38,24 +46,48 @@ public class PlayerHealth : MonoBehaviour, IDamageable
         sfx?.PlayHit();
 
         if (currentHealth <= 0)
-        {
             Die();
-        }        
     }
 
     public void Heal(int amount)
     {
+        if (isDead) return;
+
         currentHealth = Mathf.Clamp(currentHealth + amount, 0, maxHealth);
         UpdateUI();
     }
 
-    public float GetMaxHealth()
+    private void Die()
     {
-        return maxHealth;
+        if (isDead) return;
+
+        isDead = true;
+        currentHealth = 0;
+        UpdateUI();
+
+        experienceSystem?.HandlePlayerDeath();
+
+        // Disable control
+        GetComponent<PlayerInputHandler>().enabled = false;
+        GetComponent<TopDownCharacterController>().enabled = false;
+
+        RespawnManager.Instance?.PlayerDied(this);
     }
+
+    public void RespawnAt(Vector3 position)
+    {
+        isDead = false;
+        currentHealth = maxHealth;
+        UpdateUI();
+
+        // Re-enable control
+        GetComponent<PlayerInputHandler>().enabled = true;
+        GetComponent<TopDownCharacterController>().enabled = true;
+    }
+
     private void UpdateUI()
     {
-        if (healthBar)
+        if (healthBar && maxHealth > 0)
             healthBar.fillAmount = currentHealth / maxHealth;
     }
 
@@ -63,11 +95,12 @@ public class PlayerHealth : MonoBehaviour, IDamageable
     {
         ApplyStats(true);
     }
-
-    public void Die()
+    public void RestoreFull()
     {
-        experienceSystem?.HandlePlayerDeath();
-        SceneManager.LoadSceneAsync("GameOver");
-        SceneManager.UnloadSceneAsync("Dungeon");
+        currentHealth = maxHealth;
+        UpdateUI();
     }
+
+    public float GetMaxHealth() => maxHealth;
+    public float GetCurrentHealth() => currentHealth;
 }

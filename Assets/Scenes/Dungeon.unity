@@ -376,6 +376,8 @@ MonoBehaviour:
   elitePackChanceMax: 0.25
   elitePackSize: {x: 3, y: 5}
   groupRadius: 2
+  miniBossType: {fileID: 11400000, guid: 71cf9ea4f6704594d8798097d1e30f04, type: 2}
+  minionType: {fileID: 11400000, guid: 24426316420e84044b1e0760672c2b8d, type: 2}
   showGizmo: 1
   verboseLogs: 1
 --- !u!4 &999963230
@@ -1064,6 +1066,10 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 319be94f1b6810f45be03fbeb5226ab8, type: 2}
   - {fileID: 11400000, guid: 4aa5aabac3e57d84abeea41bbd45a289, type: 2}
   propPrefab: {fileID: 7100895472540434257, guid: a9f66d528e17ef343891fceb8124106e, type: 3}
+  spikeTrapPrefab: {fileID: 4061423657674083830, guid: 17f5a272154b29148958507602235998, type: 3}
+  trapChance: 0.05
+  checkpointPrefab: {fileID: 4584452768623598641, guid: 313349c3c1948c9408120692e33b641f, type: 3}
+  numberOfCheckpoints: 1
   OnFinished:
     m_PersistentCalls:
       m_Calls: []

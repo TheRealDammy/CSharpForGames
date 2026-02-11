@@ -6,8 +6,8 @@ public class DeathManager : MonoBehaviour
 {
     public void Respawn()
     {
-        SceneManager.LoadSceneAsync("Dungeon");
-        SceneManager.UnloadSceneAsync("GameOver");
+        Debug.Log("Respawning Player...");
+        //RespawnManager.Instance.RespawnPlayer();
     }
 
     public void QuitGame()

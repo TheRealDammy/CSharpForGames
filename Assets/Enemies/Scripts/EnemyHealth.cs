@@ -81,7 +81,9 @@ public class EnemyHealth : MonoBehaviour, IDamageable
            if (c != null) c.enabled = false;
 
         animator.SetBool("isDead", true);
+
         GameManager.Instance?.EnemyKilled();
+        RunStats.Instance?.RegisterKill();
 
         // grant experience to player
         if (enemyData == null)

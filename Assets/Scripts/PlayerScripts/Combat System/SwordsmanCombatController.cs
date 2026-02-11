@@ -73,6 +73,7 @@ public class SwordsmanCombatController : CombatController
             {
                 Vector2 hitPoint = hit.ClosestPoint(center);
                 dmg.TakeDamage(damage, hitPoint, lastDirection);
+                DamageNumberSpawner.Instance?.Spawn(damage, hitPoint);
             }
             if (dmg == null)
             {

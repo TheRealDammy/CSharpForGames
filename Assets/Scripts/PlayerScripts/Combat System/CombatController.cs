@@ -57,6 +57,7 @@ public abstract class CombatController : MonoBehaviour
         if (Time.time < lastAttackTime + attackCooldown) return;
         sfx?.PlayAttack();
         ExecuteAttack();
+        RunStats.Instance?.RegisterDamage(GetFinalDamage());
     }
 
     // Apply stats to compute final damage.
@@ -96,6 +97,7 @@ public abstract class CombatController : MonoBehaviour
         int strength = stats.GetStatLevel(PlayerStatType.Strength);
         float multiplier = 1f + 0.05f * strength;
         return Mathf.RoundToInt(baseDamage * multiplier);
+
     }
 
     protected abstract void ExecuteAttack();

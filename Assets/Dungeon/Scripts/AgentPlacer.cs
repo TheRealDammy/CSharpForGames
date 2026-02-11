@@ -1,4 +1,4 @@
-using System;
+ï»¿using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
@@ -48,6 +48,10 @@ public class AgentPlacer : MonoBehaviour
     [Header("Groups")]
     [Tooltip("Tiles around the anchor to spawn group/pack members.")]
     [SerializeField, Range(0.5f, 6f)] private float groupRadius = 2.0f;
+
+    [Header("Checpoint Guards")]
+    [SerializeField] private EnemyTypeSO miniBossType;
+    [SerializeField] private EnemyTypeSO minionType;
 
     [Header("Debug")]
     [SerializeField] private bool showGizmo = false;
@@ -141,7 +145,7 @@ public class AgentPlacer : MonoBehaviour
         {
             SpawnCorridorEnemies(corridorCount);
         }
-      
+
         GameManager.Instance.RegisterEnemies(totalRoomEnemies + corridorCount);
     }
 
@@ -168,6 +172,34 @@ public class AgentPlacer : MonoBehaviour
 
         return Mathf.Max(0, count);
     }
+
+    public void ClearReservedForRoom(Room room)
+    {
+        if (room == null) return;
+
+        foreach (var tile in room.FloorTiles)
+        {
+            reserved.Remove(tile);
+        }
+    }
+
+
+    public void RespawnRoom(Room room)
+    {
+        if (room == null) return;
+
+        int roomIndex = dungeonData.rooms.IndexOf(room);
+        if (roomIndex < 0) return;
+
+        ClearReservedForRoom(room);
+
+        int count = GetEnemyCountForRoom(roomIndex);
+        float difficulty = ComputeRoomDifficulty(roomIndex);
+
+        PlaceEnemiesSmart(room, count, difficulty);
+    }
+
+
 
     private float ComputeRoomDifficulty(int roomIndex)
     {
@@ -234,13 +266,12 @@ public class AgentPlacer : MonoBehaviour
             );
         }
 
-        // ---------- APPLY HEALTH AFTER STATS ----------
         var health = player.GetComponent<PlayerHealth>();
         if (health != null)
         {
-            health.ForceRefresh(); // safer than ApplyStats(true)
+            health.ApplyStats(true); // FULL HEAL ON SPAWN
         }
-
+        RespawnManager.Instance?.SetCheckpoint(player.transform.position);
     }
 
     private void EnsureRoomAccessibleTiles(Room room)
@@ -319,7 +350,7 @@ public class AgentPlacer : MonoBehaviour
 
         if (candidates.Count == 0) return;
 
-        // Score tiles: prefer “middle-ish” tiles by distance from wall, but keep some randomness
+        // Score tiles: prefer â€œmiddle-ishâ€ tiles by distance from wall, but keep some randomness
         candidates = candidates
             .OrderByDescending(t =>
             {
@@ -449,6 +480,44 @@ public class AgentPlacer : MonoBehaviour
 
         controller.Init(type, variant, dungeonData.PlayerReference.transform);
     }
+
+    public void SpawnCheckpointGuards(Room room, Vector2Int centerTile, Checkpoint cp)
+    {
+        List<Vector2Int> nearby = room.FloorTiles
+            .Where(t => Manhattan(t, centerTile) <= 3)
+            .Where(t => !reserved.Contains(t))
+            .ToList();
+
+        if (nearby.Count == 0) return;
+
+        // Spawn Mini Boss
+        Vector2Int bossTile = nearby[0];
+        int vIndex = PickVariantIndex(miniBossType, difficulty: 2f);
+        EnemyVariant variant = (EnemyVariant)vIndex;
+        SpawnGuardEnemy(room, bossTile, miniBossType, variant, cp);
+
+        // Spawn 2 Minions
+        for (int i = 1; i < Mathf.Min(3, nearby.Count); i++)
+        {
+            int varIndex = PickVariantIndex(minionType, difficulty: 1.5f);
+            EnemyVariant varVariant = (EnemyVariant)varIndex;
+            SpawnGuardEnemy(room, nearby[i], minionType, varVariant, cp);
+        }
+    }
+
+    private void SpawnGuardEnemy(Room room, Vector2Int tile, EnemyTypeSO type, EnemyVariant variant, Checkpoint cp)
+    {
+        GameObject enemy = Instantiate(enemyPrefab);
+        enemy.transform.position = new Vector3(tile.x + 0.5f, tile.y + 0.5f, -1f);
+
+        var controller = enemy.GetComponent<EnemyController>();
+        controller.Init(type, variant, dungeonData.PlayerReference.transform);
+
+        cp.RegisterGuard(enemy);
+
+        reserved.Add(tile);
+    }
+
 
     // ---------------------------
     // TYPE PICKING (ANTI-STREAK)

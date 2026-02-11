@@ -8,6 +8,7 @@ public class GameManager : MonoBehaviour
 
     public int AliveEnemies { get; private set; }
     public event Action<int> OnEnemyCountChanged;
+    public event Action OnGameCompleted;
 
     private void Awake()
     {
@@ -38,7 +39,7 @@ public class GameManager : MonoBehaviour
 
     private void CompleteGame()
     {
-        Debug.Log("All enemies defeated!");
-        SceneManager.LoadScene("WinScene");
+        OnGameCompleted?.Invoke();
+        SceneManager.LoadScene("WinScreen");
     }
 }
